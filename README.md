@@ -5,8 +5,9 @@
 <p align="center">A clear view of what your household owns and owes.</p>
 <p align="center"><strong>Works offline · Stored in your browser · English & 中文</strong></p>
 <p align="center"><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
+<p align="center"><a href="https://zhouhegu.github.io/family-asset-ledger/">Try it online</a> · <a href="https://github.com/zhouhegu/family-asset-ledger/archive/refs/heads/main.zip">Download</a> · <a href="https://github.com/zhouhegu/family-asset-ledger/issues">Feedback</a></p>
 
-Track assets, debts, allocation and net worth in a lightweight browser app. Download the folder, open it, and start your ledger—no account, backend or database installation required.
+Track assets, debts, allocation and net worth in a lightweight browser app. No sign-up, no backend to set up, and no ledger data uploaded. Try it online or download it for offline use.
 
 [![Household overview showing net worth, asset allocation and balance history in English](docs/images/dashboard-en-light.png)](docs/images/dashboard-en-light.png)
 
@@ -32,13 +33,19 @@ Balances are entered manually. Update each affected account independently; total
 
 ## Get started
 
-1. Download and unzip the repository.
+**Online:** [Open Family Asset Ledger](https://zhouhegu.github.io/family-asset-ledger/) and choose **View example** to explore with fictional data, or **Add asset** to start your own ledger. No installation is needed.
+
+**Offline:**
+
+1. [Download](https://github.com/zhouhegu/family-asset-ledger/archive/refs/heads/main.zip) and unzip the repository.
 2. Open **`index.html`** in a modern browser. Keep the **`assets/`** folder beside it.
 3. Choose your currency, then select **Add asset** to record an asset or debt. Use **Import backup** if you already have a ledger.
 
 Want to explore first? **View example** opens a read-only preview with fictional records. **Back to my ledger** returns to your own data; the example never saves or merges its records into your ledger.
 
 No npm installation or build step is needed to use the app. Keep the project in a fixed location and use the same browser and address each time.
+
+The online and downloaded versions have separate browser storage. Use a JSON backup to move your ledger between them. For offline access, use the downloaded version.
 
 ## Language, currency and appearance
 
@@ -102,6 +109,8 @@ The tests use a simulated DOM and in-memory storage. Check interface changes in 
 ## Contributing
 
 Bug reports, translation improvements and focused pull requests are welcome. For a UI issue, include the browser, language, appearance and steps to reproduce it. Use fictional records in examples and screenshots; keep personal ledgers and backup files out of issues and commits.
+
+If this project is useful to you, consider giving it a star so others can discover it.
 
 ## License
 

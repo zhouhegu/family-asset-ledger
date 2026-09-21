@@ -5,8 +5,9 @@
 <p align="center">把一家人的资产与负债，记在一本账里。</p>
 <p align="center"><strong>离线可用 · 数据保存在浏览器 · 中英文切换</strong></p>
 <p align="center"><a href="README.md">English</a> | <strong>简体中文</strong></p>
+<p align="center"><a href="https://zhouhegu.github.io/family-asset-ledger/">在线体验</a> · <a href="https://github.com/zhouhegu/family-asset-ledger/archive/refs/heads/main.zip">下载使用</a> · <a href="https://github.com/zhouhegu/family-asset-ledger/issues">反馈问题</a></p>
 
-一个轻量的浏览器账本，用于记录家庭资产、负债、配置占比和净资产变化。下载项目后打开即可使用，无需注册账户、部署后端或安装数据库。
+一个轻量的浏览器账本，用于记录家庭资产、负债、配置占比和净资产变化。无需注册、无需部署后端，账本数据留在自己的浏览器。可以直接在线体验，也可以下载后离线使用。
 
 [![中文家庭资产概览，展示净资产、资产配置与历史趋势](docs/images/dashboard-zh-light.png)](docs/images/dashboard-zh-light.png)
 
@@ -32,13 +33,19 @@
 
 ## 快速开始
 
-1. 下载并解压整个仓库。
+**在线使用：**[打开家庭资产账本](https://zhouhegu.github.io/family-asset-ledger/)，点击**查看示例**体验虚构数据，或点击**新增资产**开始自己的账本，无需安装。
+
+**离线使用：**
+
+1. [下载](https://github.com/zhouhegu/family-asset-ledger/archive/refs/heads/main.zip)并解压整个仓库。
 2. 使用现代浏览器打开 **`index.html`**，保留同目录下的 **`assets/`** 文件夹。
 3. 选择账本币种，点击**新增资产**录入第一项资产或负债。已有账本可直接**导入备份**。
 
 想先了解界面，可以点击**查看示例**。它使用虚构记录，只供查看；点击**返回我的账本**即可返回，示例内容不会写入或混入自己的账本。
 
 使用应用无需安装 npm 依赖或运行构建。建议把项目放在固定位置，并始终使用同一浏览器和入口打开。
+
+在线版与下载版使用各自独立的浏览器存储，迁移账本请使用 JSON 备份。需要断网使用时，请选择下载版。
 
 ## 语言、币种与外观
 
@@ -102,6 +109,8 @@ npm run build:css
 ## 参与贡献
 
 欢迎反馈问题、改进翻译或提交范围明确的 Pull Request。反馈界面问题时，请说明浏览器、语言、外观和复现步骤。示例与截图请使用虚构数据，不要将个人账本或备份放入 Issue 或提交记录。
+
+如果这个项目对你有帮助，欢迎点一个 Star，让更多人发现它。
 
 ## 许可
 
