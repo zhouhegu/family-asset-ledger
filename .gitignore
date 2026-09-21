@@ -1,0 +1,13 @@
+# Local references may include personal balances and screenshots.
+local-reference/
+private-data/
+family_assets_backup_*.json
+**/.chrome_test_profile/
+**/chrome-profile/
+.DS_Store
+node_modules/
+coverage/
+*.log
+.env
+.env.*
+!.env.example

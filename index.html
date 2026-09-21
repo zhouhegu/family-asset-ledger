@@ -1,0 +1,2972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title data-i18n="家庭资产配置账本">家庭资产配置账本</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo.svg?v=3">
+  <script src="assets/theme.js"></script>
+  <link rel="stylesheet" href="assets/tailwind.css">
+  <link rel="stylesheet" href="assets/theme.css">
+  <script src="assets/i18n.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-feature-settings: "tnum" 1, "cv02" 1;
+      letter-spacing: 0;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.35);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.55);
+    }
+    .donut-slice {
+      transition: opacity 0.15s ease;
+    }
+    .donut-slice:hover {
+      opacity: .8;
+    }
+    .ledger-header {
+      background: var(--ledger-header);
+
+    }
+    [role="dialog"] { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+    [role="dialog"] :is(input:not([type="file"]), select) { min-height: 40px; font-size: 14px; }
+    [role="dialog"] label { line-height: 1.5; }
+    .dialog-actions { gap: .5rem; }
+    .dialog-actions button { min-height: 40px; min-width: 80px; font-size: 13px; }
+    button { cursor: pointer; }
+    button:disabled, select:disabled { cursor: not-allowed; opacity: .5; }
+    #welcomePanel { max-width: 640px; margin: 3rem auto; padding: 2rem; text-align: left; }
+    #welcomeTitle { font-size: 22px; line-height: 1.4; letter-spacing: -.015em; }
+    .welcome-description { margin-top: .75rem; line-height: 1.7; }
+    .welcome-actions { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: .75rem; margin-top: 1.5rem; }
+    .welcome-actions button, #exit-demo { min-height: 44px; }
+    .welcome-example { display: flex; align-items: center; flex-wrap: wrap; gap: 0 .75rem; margin-top: .5rem; }
+    .welcome-example button { min-height: 44px; padding: 0; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--ledger-muted); }
+    .welcome-example button:hover { text-decoration-color: currentColor; }
+    .welcome-note { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--ledger-divider); line-height: 1.7; }
+    #demoBanner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    #demoBanner.hidden, #headerControls.hidden { display: none; }
+    .mobile-cell-label, .mobile-action-label { display: none; }
+    .holdings-search input { min-height: 36px; }
+    .holdings-search svg { top: 50%; transform: translateY(-50%); }
+    .trend-summary > div:first-child { flex-wrap: wrap; gap: .35rem .75rem; }
+    .trend-summary > div:first-child > span { margin: 0; }
+    .trend-summary { gap: .5rem; }
+    .cat-btn, [id^="btn-horizon-"] { min-height: 32px; }
+    #targetConfigModal input { width: 4rem; padding-inline: .4rem; }
+    #clear-asset-filters { min-height: 44px; }
+    #m-p1, #m-p2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* 聚焦轮廓美化 */
+    button:focus-visible, input:focus-visible, select:focus-visible, [tabindex="0"]:focus-visible {
+      outline: 2px solid var(--ledger-focus);
+      outline-offset: 2px;
+    }
+    .header-controls { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 104px) 132px; align-items: center; gap: .5rem; }
+    .header-controls > button { min-width: 0; min-height: 36px; justify-content: center; white-space: nowrap; }
+    .member-switcher { display: grid; grid-template-columns: 48px repeat(4, minmax(0, 1fr)); gap: .25rem; }
+    .member-switcher button { min-width: 0; min-height: 28px; margin: 0; }
+    .header-brand { min-width: 0; }
+    .header-brand > div:first-child { flex-shrink: 0; }
+    .header-preferences { display: grid; grid-template-columns: 92px 86px 124px; gap: .5rem; margin-left: auto; flex-shrink: 0; }
+    .header-preferences select { width: 100%; min-width: 0; min-height: 36px; cursor: pointer; }
+    #data-status-badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #catFilterGroup { flex-wrap: wrap; }
+    header > div { flex-direction: column; align-items: stretch; }
+    .header-brand > div:nth-child(2) { flex: 1; min-width: 0; }
+    #header-main-title, #header-subtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .summary-grid > div > div:first-child { flex-wrap: wrap; gap: .4rem; min-height: 48px; align-content: flex-start; }
+    .summary-grid > div > div:last-child { min-height: 48px; }
+    #stat-assets-subtext, #stat-debt-subtext, #stat-pnl-subtext { flex-wrap: wrap; gap: .3rem .75rem; }
+    html[lang="en"] table { min-width: 780px; }
+    .table-action { min-width: 32px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; }
+    button[data-i18n-aria-label="关闭弹窗"] { flex-shrink: 0; min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+    @media (max-width: 1023px) {
+      .header-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .member-switcher { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem; }
+      .member-switcher > span { display: none; }
+      .member-switcher > button { min-width: 0; margin: 0; padding-inline: .25rem; }
+    }
+    @media (max-width: 639px) {
+      .header-brand { gap: .5rem; flex-wrap: wrap; }
+      .header-preferences { flex-basis: 100%; grid-template-columns: minmax(0, 1fr) 82px minmax(0, 1.2fr); }
+      .header-preferences select { min-height: 44px; font-size: 16px; padding-inline: .4rem; }
+      .header-brand h1 { font-size: 14px; }
+      #welcomePanel { margin: 1rem auto; padding: 1.5rem; }
+      .welcome-actions { flex-direction: column; }
+      #demoBanner { align-items: stretch; flex-direction: column; }
+      #header-subtitle { display: none; }
+      .header-controls { grid-template-columns: 1.25fr .9fr .9fr 1.15fr; }
+      .header-controls > button { min-height: 48px; padding-inline: .25rem; gap: .25rem; white-space: normal; line-height: 1.3; }
+      .member-switcher button { min-height: 36px; }
+      .header-controls > button svg { display: none; }
+      .header-controls > button > span { margin: 0; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+      .summary-grid > div { padding: 1rem; min-width: 0; }
+      .summary-grid > div > div:first-child { min-height: 58px; align-items: flex-start; justify-content: flex-start; gap: .35rem; }
+      .summary-grid > div > div:first-child > span { max-width: 100%; white-space: normal; }
+      .summary-grid > div > div:nth-child(2) > span { font-size: 20px; overflow-wrap: anywhere; }
+      .summary-grid > div > div:last-child { min-height: 58px; align-items: flex-start; justify-content: flex-start; flex-direction: column; gap: .25rem; }
+      .holdings-search, .holdings-search input { width: 100%; }
+      .holdings-search input { min-height: 44px; font-size: 16px; }
+      #catFilterGroup { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; gap: .25rem; }
+      #catFilterGroup .cat-btn { flex: 1; min-height: 40px; margin: 0; }
+      [id^="btn-horizon-"] { flex: 1; min-height: 40px; }
+      .holdings-table, html[lang="en"] .holdings-table { min-width: 0; }
+      .holdings-table colgroup, .holdings-table thead { display: none; }
+      .holdings-table tbody { display: block; }
+      .holdings-table tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .65rem .75rem; padding: 1rem; }
+      .holdings-table td { padding: 0; min-width: 0; }
+      .holdings-table td:first-child { grid-column: 1 / -1; }
+      .holdings-table td:first-child > div { white-space: normal; overflow-wrap: anywhere; }
+      .holdings-table td:nth-child(3) { display: flex; justify-content: flex-end; align-items: center; gap: .35rem; }
+      .holdings-table td:nth-child(4) { text-align: left; font-size: 16px; overflow-wrap: anywhere; }
+      .holdings-table td:nth-child(5) { overflow-wrap: anywhere; }
+      .holdings-table td:nth-child(6) { grid-column: 1 / -1; padding-top: .65rem; border-top: 1px solid var(--ledger-divider, #e2e8f0); }
+      .holdings-table td:nth-child(6) > div { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: .5rem; }
+      .table-action { min-height: 44px; width: 100%; gap: .35rem; }
+      .mobile-cell-label { display: block; margin-bottom: .2rem; font: 11px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ledger-muted, #64748b); }
+      .mobile-action-label { display: inline; font-size: 12px; }
+      [role="dialog"] { padding: 1rem; border-radius: 14px; }
+      [role="dialog"] :is(input:not([type="file"]), select) { min-height: 44px; font-size: 16px; }
+      [role="dialog"] :is(button, button[data-i18n-aria-label="关闭弹窗"]) { min-height: 44px; }
+      [role="dialog"] button[data-i18n-aria-label="关闭弹窗"] { min-width: 44px; }
+      [role="dialog"] .grid-cols-2 { grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+      .dialog-actions { position: sticky; bottom: -1rem; z-index: 1; margin: 1rem -1rem -1rem; padding: .75rem 1rem; background: inherit; border-top: 1px solid var(--ledger-divider, #e2e8f0); }
+      .dialog-actions button { flex: 1; margin: 0; }
+      #valPreviewBox > div { flex-wrap: wrap; gap: .3rem .75rem; }
+      #prev-flow { overflow-wrap: anywhere; }
+      #chart-legend-container { flex-wrap: wrap; gap: .5rem 1rem; }
+      #chart-legend-container > * { margin: 0; }
+      #chart-legend-container label { min-height: 44px; }
+    }
+    @media (max-width: 359px) {
+      .summary-grid { grid-template-columns: minmax(0, 1fr); }
+      .summary-grid > div > div:first-child { min-height: 30px; }
+      .summary-grid > div > div:last-child { min-height: 40px; }
+      #targetConfigModal .space-y-2 > div { flex-wrap: wrap; gap: .5rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: 0s !important; }
+    }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 antialiased min-h-screen selection:bg-indigo-500 selection:text-white pb-14 text-sm">
+
+  <header class="sticky top-0 z-30 ledger-header border-b border-slate-200/80 py-3 shadow-2xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col gap-3">
+
+      <div class="header-brand flex items-center gap-3.5">
+        <div class="w-9 h-9" aria-hidden="true">
+          <img src="assets/logo.svg?v=3" width="36" height="36" alt="">
+        </div>
+        <div>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight" id="header-main-title"><span data-i18n="家庭资产配置账本">家庭资产配置账本</span></h1>
+          </div>
+          <div class="flex items-center gap-2 h-6">
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium border border-slate-200" id="data-status-badge"><span data-i18n="空账本">空账本</span></span>
+          </div>
+          <p class="text-xs text-slate-500" id="header-subtitle"><span data-i18n="全家汇总口径 · 包含个人与共有资产">全家汇总口径 · 包含个人与共有资产</span></p>
+        </div>
+        <div class="header-preferences">
+          <select id="languageSelect" onchange="setLanguage(this.value)" aria-label="语言" data-i18n-aria-label="语言" title="语言" data-i18n-title="语言" class="rounded-lg border border-slate-200 bg-white text-xs text-slate-700 px-2 py-1.5">
+            <option value="zh-CN" lang="zh-CN">中文</option>
+            <option value="en" lang="en">English</option>
+          </select>
+          <select data-ledger-write id="currencySelect" onchange="setCurrency(this.value)" aria-label="全局币种" data-i18n-aria-label="全局币种" title="所有资产、负债和历史记录共用此币种。更改只更新币种标识，不换算已有金额。" data-i18n-title="所有资产、负债和历史记录共用此币种。更改只更新币种标识，不换算已有金额。" class="rounded-lg border border-slate-200 bg-white text-xs text-slate-700 px-2 py-1.5"></select>
+          <select id="appearanceSelect" onchange="setAppearance(this.value)" aria-label="外观" data-i18n-aria-label="外观" title="外观" data-i18n-title="外观" class="rounded-lg border border-slate-200 bg-white text-xs text-slate-700 px-2 py-1.5">
+            <option value="system" data-i18n="跟随系统">跟随系统</option>
+            <option value="light" data-i18n="浅色模式">浅色模式</option>
+            <option value="dark" data-i18n="深色模式">深色模式</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="headerControls" class="header-controls hidden">
+
+        <div class="member-switcher flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200/70 text-xs font-semibold" role="group" aria-label="账本视角" data-i18n-aria-label="账本视角">
+          <span class="text-slate-400 pl-1.5 pr-0.5 text-xs font-medium"><span data-i18n="视角">视角</span></span>
+          <button onclick="setMember('all')" id="m-all" aria-pressed="true" class="px-2.5 py-1 rounded-lg bg-white text-slate-900 font-bold shadow-2xs transition"><span data-i18n="全家">全家</span></button>
+          <button onclick="setMember('p1')" id="m-p1" aria-pressed="false" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition"><span data-i18n="本人">本人</span></button>
+          <button onclick="setMember('p2')" id="m-p2" aria-pressed="false" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition"><span data-i18n="配偶">配偶</span></button>
+          <button onclick="setMember('share')" id="m-share" aria-pressed="false" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition"><span data-i18n="共有">共有</span></button>
+        </div>
+
+        <button onclick="togglePrivacy()" id="btn-privacy" title="隐藏金额" aria-label="隐藏金额" aria-pressed="false" class="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center space-x-1.5 shadow-2xs transition min-h-[34px]" data-i18n-title="隐藏金额" data-i18n-aria-label="隐藏金额">
+          <svg id="eye-icon" class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+          <span id="privacy-text"><span data-i18n="隐藏金额">隐藏金额</span></span>
+        </button>
+
+        <button data-ledger-write onclick="openDataModal()" class="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center space-x-1 shadow-2xs transition min-h-[34px]" title="数据备份与恢复" data-i18n-title="数据备份与恢复">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+          <span><span data-i18n="备份">备份</span></span>
+        </button>
+
+        <button data-ledger-write onclick="openSettingsModal()" id="btn-settings" class="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center space-x-1 shadow-2xs transition min-h-[34px]" title="成员设置" data-i18n-title="成员设置">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span><span data-i18n="成员">成员</span></span>
+        </button>
+
+        <button data-ledger-write onclick="openAddAssetModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center space-x-1.5 shadow-sm transition min-h-[34px]">
+          <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          <span><span data-i18n="新增资产">新增资产</span></span>
+        </button>
+
+      </div>
+      <p id="preferences-feedback" role="alert" class="hidden text-xs text-rose-700"></p>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-8 py-5 space-y-4">
+    <section id="welcomePanel" class="hidden bg-white ledger-panel border border-slate-200" aria-labelledby="welcomeTitle">
+      <h2 id="welcomeTitle" class="text-2xl font-semibold text-slate-900" data-i18n="开始记录家庭资产">开始记录家庭资产</h2>
+      <p class="welcome-description text-sm text-slate-600" data-i18n="添加第一项资产或负债，也可以导入已有备份。">添加第一项资产或负债，也可以导入已有备份。</p>
+      <div class="welcome-actions">
+        <button data-ledger-write onclick="openAddAssetModal()" class="px-5 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-sm font-bold" data-i18n="新增资产">新增资产</button>
+        <button onclick="openImportBackup()" class="px-5 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium" data-i18n="导入备份">导入备份</button>
+      </div>
+      <div class="welcome-example">
+        <button onclick="viewDemo()" class="text-slate-700 text-sm font-medium" aria-describedby="welcome-demo-hint" data-i18n="查看示例">查看示例</button>
+        <span id="welcome-demo-hint" class="text-xs text-slate-500" data-i18n="只读预览">只读预览</span>
+      </div>
+      <p class="welcome-note text-xs text-slate-500" data-i18n="数据保存在当前浏览器，请定期导出备份。">数据保存在当前浏览器，请定期导出备份。</p>
+    </section>
+    <section id="demoBanner" class="hidden p-4 rounded-2xl bg-indigo-50 border border-indigo-200" aria-label="示例预览" data-i18n-aria-label="示例预览">
+      <div>
+        <p class="font-bold text-sm text-indigo-900" data-i18n="示例预览 · 只读">示例预览 · 只读</p>
+        <p class="text-xs text-indigo-700 mt-1" data-i18n="这里展示虚构的示例数据，不会写入或覆盖你的账本。">这里展示虚构的示例数据，不会写入或覆盖你的账本。</p>
+      </div>
+      <button id="exit-demo" onclick="exitDemo()" class="shrink-0 px-4 py-2 rounded-xl bg-white border border-indigo-200 text-indigo-700 text-sm font-bold" data-i18n="返回我的账本">返回我的账本</button>
+    </section>
+    <div id="ledgerContent" class="hidden space-y-4">
+    <section class="summary-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
+
+      <div class="net-worth-card text-white p-5 ledger-panel border border-slate-800 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-indigo-200">
+          <span class="font-bold tracking-wide" id="card-networth-title"><span data-i18n="家庭净资产">家庭净资产</span></span>
+          <span class="text-emerald-400 font-bold text-xs bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/20" id="stat-monthly-diff"><span data-i18n="+0.65% 较上次记录">+0.65% 较上次记录</span></span>
+        </div>
+        <div class="my-2.5">
+          <span class="text-2xl sm:text-3xl font-semibold tracking-tight" id="stat-net-worth">—</span>
+        </div>
+        <div class="text-xs text-slate-300/80 flex items-center justify-between border-t border-white/10 pt-2">
+          <span id="stat-ytd-growth-label"><span data-i18n="今年以来增长">今年以来增长</span></span>
+          <strong class="text-emerald-400 font-bold" id="stat-ytd-growth-val">—</strong>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 ledger-panel border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-slate-600">
+          <span class="font-bold" id="card-assets-title"><span data-i18n="资产总额">资产总额</span></span>
+          <span class="text-slate-500 font-medium text-xs" id="stat-asset-count"><span data-i18n="12 项资产 · 2 笔负债">12 项资产 · 2 笔负债</span></span>
+        </div>
+        <div class="my-2.5">
+          <span class="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight" id="stat-total-assets">—</span>
+        </div>
+        <div class="text-xs text-slate-600 flex items-center justify-between border-t border-slate-100 pt-2" id="stat-assets-subtext">
+          <span>—</span>
+          <span class="text-slate-500">—</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 ledger-panel border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-slate-600">
+          <span class="font-bold" id="card-debt-title"><span data-i18n="负债总额">负债总额</span></span>
+          <span class="text-xs px-2 py-0.5 rounded-md font-bold" id="stat-debt-badge"><span data-i18n="负债率 22.7%">负债率 22.7%</span></span>
+        </div>
+        <div class="my-2.5">
+          <span class="text-2xl sm:text-3xl font-semibold text-slate-800 tracking-tight" id="stat-liabilities">—</span>
+        </div>
+        <div class="text-xs text-slate-600 flex items-center justify-between border-t border-slate-100 pt-2" id="stat-debt-subtext">
+          <span>—</span>
+          <span class="text-slate-500">—</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 ledger-panel border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+        <div class="flex items-center justify-between gap-1.5 text-xs text-slate-600">
+          <span class="font-bold whitespace-nowrap"><span data-i18n="今年已记录收益">今年已记录收益</span></span>
+          <span class="text-xs px-2 py-0.5 rounded-md font-semibold border bg-slate-50 text-slate-600 border-slate-200 shrink-0 cursor-help" id="stat-yield-rate" title="当年已记录投资收益额 ÷ 当前金融资产总额" data-i18n-title="当年已记录投资收益额 ÷ 当前金融资产总额"><span data-i18n="占金融资产 —">占金融资产 —</span></span>
+        </div>
+        <div class="my-2.5">
+          <span class="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight" id="stat-ytd-income">—</span>
+        </div>
+        <div class="text-xs text-slate-500 flex items-center justify-between border-t border-slate-100 pt-2" id="stat-pnl-subtext">
+          <span><span data-i18n="仅统计估值浮盈与利息">仅统计估值浮盈与利息</span></span>
+          <span class="text-slate-500 font-medium"><span data-i18n="不含存入本金">不含存入本金</span></span>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-12 gap-3.5 items-stretch">
+
+      <div class="xl:col-span-5 bg-white p-4 sm:p-5 ledger-panel border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+        <div>
+
+          <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                  <span id="alloc-panel-title"><span data-i18n="大类资产配置占比">大类资产配置占比</span></span>
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5"><span data-i18n="活钱 · 稳健 · 权益 · 黄金（金融资产）">活钱 · 稳健 · 权益 · 黄金（金融资产）</span></p>
+            </div>
+            <button data-ledger-write onclick="openTargetConfigModal()" class="shrink-0 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition min-h-[32px]"><span data-i18n="配置目标">配置目标</span></button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+
+            <div class="sm:col-span-5 flex flex-col items-center justify-center py-1">
+              <div class="relative w-36 h-36 flex items-center justify-center">
+                <svg id="allocDonutSvg" viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
+
+                </svg>
+                <div class="absolute text-center pointer-events-none">
+                  <span class="text-[10px] text-slate-400 font-bold block uppercase"><span data-i18n="可投资产">可投资产</span></span>
+                  <span class="text-sm font-semibold text-slate-900 tracking-tight" id="center-donut-val">100%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="allocation-list sm:col-span-7">
+
+              <div class="allocation-row">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                    <span class="font-bold text-slate-800"><span data-i18n="活钱管理">活钱管理</span></span>
+                  </div>
+                  <div class="flex items-center space-x-1.5 tabular-nums">
+                    <span class="text-slate-600 font-bold" id="pct-cash-amt">—</span>
+                    <span class="allocation-share" id="pct-cash-val">13.5%</span>
+                  </div>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                  <div id="bar-cash" class="bg-cyan-500 h-full rounded-full transition-all duration-500" style="width: 13.5%"></div>
+                </div>
+                <div class="flex justify-between items-center text-[11px] text-slate-500 mt-1">
+                  <span><span data-i18n="目标:">目标:</span> <strong class="text-slate-600" id="target-cash-text">5%~15%</strong></span>
+                  <span id="diff-cash-text" class="text-emerald-700 font-medium"><span data-i18n="处于目标区间">处于目标区间</span></span>
+                </div>
+              </div>
+
+              <div class="allocation-row">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="font-bold text-slate-800"><span data-i18n="稳健资产">稳健资产</span></span>
+                  </div>
+                  <div class="flex items-center space-x-1.5 tabular-nums">
+                    <span class="text-slate-600 font-bold" id="pct-fixed-amt">—</span>
+                    <span class="allocation-share" id="pct-fixed-val">32.5%</span>
+                  </div>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                  <div id="bar-fixed" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 32.5%"></div>
+                </div>
+                <div class="flex justify-between items-center text-[11px] text-slate-500 mt-1">
+                  <span><span data-i18n="目标:">目标:</span> <strong class="text-slate-600" id="target-fixed-text">30%~50%</strong></span>
+                  <span id="diff-fixed-text" class="text-emerald-700 font-medium"><span data-i18n="处于目标区间">处于目标区间</span></span>
+                </div>
+              </div>
+
+              <div class="allocation-row">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                    <span class="font-bold text-slate-800"><span data-i18n="权益资产">权益资产</span></span>
+                  </div>
+                  <div class="flex items-center space-x-1.5 tabular-nums">
+                    <span class="text-slate-600 font-bold" id="pct-equity-amt">—</span>
+                    <span class="allocation-share" id="pct-equity-val">45.3%</span>
+                  </div>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                  <div id="bar-equity" class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: 45.3%"></div>
+                </div>
+                <div class="flex justify-between items-center text-[11px] text-slate-500 mt-1">
+                  <span><span data-i18n="目标:">目标:</span> <strong class="text-slate-600" id="target-equity-text">20%~40%</strong></span>
+                  <span id="diff-equity-text" class="text-amber-700 font-bold"><span data-i18n="高于目标上限 5.3%">高于目标上限 5.3%</span></span>
+                </div>
+              </div>
+
+              <div class="allocation-row">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span class="font-bold text-slate-800"><span data-i18n="黄金大宗">黄金大宗</span></span>
+                  </div>
+                  <div class="flex items-center space-x-1.5 tabular-nums">
+                    <span class="text-slate-600 font-bold" id="pct-gold-amt">—</span>
+                    <span class="allocation-share" id="pct-gold-val">8.8%</span>
+                  </div>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                  <div id="bar-gold" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 8.8%"></div>
+                </div>
+                <div class="flex justify-between items-center text-[11px] text-slate-500 mt-1">
+                  <span><span data-i18n="目标:">目标:</span> <strong class="text-slate-600" id="target-gold-text">5%~15%</strong></span>
+                  <span id="diff-gold-text" class="text-emerald-700 font-medium"><span data-i18n="处于目标区间">处于目标区间</span></span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="xl:col-span-7 bg-white p-4 sm:p-5 ledger-panel border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+        
+        <div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 class="text-sm font-bold text-slate-900" id="trend-panel-title"><span data-i18n="净资产演变走势">净资产演变走势</span></h2>
+
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5" id="trend-time-range-text"><span data-i18n="时间区间: 2026.01 ~ 2026.09 (今年以来)">时间区间: 2026.01 ~ 2026.09 (今年以来)</span></p>
+            </div>
+
+            <div class="toolbar-segment flex items-center space-x-0.5 bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+              <button onclick="setChartHorizon('ytd')" id="btn-horizon-ytd" aria-pressed="true" class="px-2.5 py-1 rounded-md bg-white text-indigo-700 shadow-2xs font-bold transition"><span data-i18n="今年以来">今年以来</span></button>
+              <button onclick="setChartHorizon('1y')" id="btn-horizon-1y" aria-pressed="false" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition"><span data-i18n="近1年">近1年</span></button>
+              <button onclick="setChartHorizon('3y')" id="btn-horizon-3y" aria-pressed="false" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition"><span data-i18n="近3年">近3年</span></button>
+              <button onclick="setChartHorizon('all')" id="btn-horizon-all" aria-pressed="false" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition"><span data-i18n="全部历史">全部历史</span></button>
+            </div>
+          </div>
+
+          <div class="trend-summary mb-2 p-2 rounded-xl bg-slate-50 border border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-600">
+            <div class="flex items-center space-x-3">
+              <span><span data-i18n="区间起点:">区间起点:</span> <strong class="text-slate-800 tabular-nums" id="chart-start-val">—</strong></span>
+              <span><span data-i18n="最新净资产:">最新净资产:</span> <strong class="text-indigo-600 font-semibold tabular-nums" id="chart-end-val">—</strong></span>
+            </div>
+            <div class="text-emerald-600 font-bold tabular-nums text-xs" id="chart-gain-val">
+              —
+            </div>
+          </div>
+
+          <div class="relative w-full h-56 p-1 overflow-hidden cursor-crosshair focus:outline-hidden" id="trendContainer" tabindex="0" role="region" aria-label="资产走势图，支持使用键盘左右方向键在时间节点间切换查看" data-i18n-aria-label="资产走势图，支持使用键盘左右方向键在时间节点间切换查看">
+            <canvas id="trendCanvas" class="w-full h-full block"></canvas>
+
+            <div id="trendEmptyState" class="absolute inset-0 bg-white/95 backdrop-blur-2xs hidden flex flex-col items-center justify-center text-slate-500 text-xs">
+              <svg class="w-8 h-8 text-slate-300 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+              <span><span data-i18n="该成员暂无长周期历史演变数据">该成员暂无长周期历史演变数据</span></span>
+              <span class="text-slate-400 text-[11px] mt-0.5"><span data-i18n="请切换至「全家」视角查看总体财富复盘">请切换至「全家」视角查看总体财富复盘</span></span>
+            </div>
+
+            <div id="chartTooltip" class="absolute hidden pointer-events-none bg-slate-950/95 text-white text-xs px-3 py-2 rounded-xl shadow-xl border border-white/10 z-20 min-w-40">
+              <div class="font-bold text-slate-300 pb-1 mb-1 border-b border-white/10 text-xs flex justify-between">
+                <span id="tip-date">2026.09</span>
+                <span class="text-slate-400 font-normal text-[11px]"><span data-i18n="时点数据">时点数据</span></span>
+              </div>
+              <div class="space-y-0.5 text-xs tabular-nums">
+                <div class="flex justify-between space-x-3 text-indigo-300">
+                  <span><span data-i18n="净资产:">净资产:</span></span><strong id="tip-networth" class="text-white font-bold">—</strong>
+                </div>
+                <div class="flex justify-between space-x-3 text-blue-300" id="tip-row-assets">
+                  <span><span data-i18n="总资产:">总资产:</span></span><strong id="tip-total" class="text-white font-bold">—</strong>
+                </div>
+                <div class="flex justify-between space-x-3 text-amber-300" id="tip-row-debt">
+                  <span><span data-i18n="负债总额:">负债总额:</span></span><strong id="tip-debt" class="text-white font-bold">—</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+          <div class="flex items-center space-x-4" id="chart-legend-container">
+            <span class="flex items-center font-bold text-slate-700" id="legend-net">
+              <span class="w-2.5 h-1 bg-indigo-600 rounded-full mr-1.5 shadow-xs"></span><span data-i18n="净资产">净资产</span>
+            </span>
+            <label class="flex items-center gap-1.5 text-slate-600 cursor-pointer min-h-[32px]">
+              <input type="checkbox" id="chk-show-assets" onchange="toggleSeries('assets')" class="rounded border-slate-300 accent-blue-500">
+              <span class="w-2.5 h-1 bg-blue-400 rounded-full"></span><span data-i18n="总资产">总资产</span>
+            </label>
+            <label class="flex items-center gap-1.5 text-slate-600 cursor-pointer min-h-[32px]">
+              <input type="checkbox" id="chk-show-debt" onchange="toggleSeries('debt')" class="rounded border-slate-300 accent-amber-500">
+              <span class="w-2.5 h-1 bg-amber-400 rounded-full"></span><span data-i18n="负债">负债</span>
+            </label>
+          </div>
+          <span class="text-xs text-slate-500" id="trend-note-text"><span data-i18n="数据来源: 本地记账与估值历史">数据来源: 本地记账与估值历史</span></span>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-12 gap-3.5 items-start">
+
+      <div class="xl:col-span-8 bg-white ledger-panel border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col">
+
+        <div class="p-4 border-b border-slate-100 flex flex-col gap-3">
+          <div class="flex items-center space-x-2">
+            <h3 class="text-sm font-bold text-slate-900" id="holdings-panel-title"><span data-i18n="家庭资产持仓清单">家庭资产持仓清单</span></h3>
+            <span class="text-xs text-slate-500" id="holdings-count-tag"><span data-i18n="(共 14 项标的)">(共 14 项标的)</span></span>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center space-x-0.5 bg-slate-100 p-0.5 rounded-lg text-xs font-medium" id="catFilterGroup">
+              <button onclick="filterCat('all')" data-category="all" aria-pressed="true" class="cat-btn px-2 py-1 rounded-md bg-white text-slate-900 font-bold shadow-2xs"><span data-i18n="全部">全部</span></button>
+              <button onclick="filterCat('cash')" data-category="cash" aria-pressed="false" class="cat-btn px-2 py-1 rounded-md text-slate-600 hover:text-slate-900"><span data-i18n="活钱">活钱</span></button>
+              <button onclick="filterCat('fixed')" data-category="fixed" aria-pressed="false" class="cat-btn px-2 py-1 rounded-md text-slate-600 hover:text-slate-900"><span data-i18n="稳健">稳健</span></button>
+              <button onclick="filterCat('fund')" data-category="fund" aria-pressed="false" class="cat-btn px-2 py-1 rounded-md text-slate-600 hover:text-slate-900"><span data-i18n="权益">权益</span></button>
+              <button onclick="filterCat('gold')" data-category="gold" aria-pressed="false" class="cat-btn px-2 py-1 rounded-md text-slate-600 hover:text-slate-900"><span data-i18n="黄金">黄金</span></button>
+              <button onclick="filterCat('real')" data-category="real" aria-pressed="false" class="cat-btn px-2 py-1 rounded-md text-slate-600 hover:text-slate-900"><span data-i18n="房产">房产</span></button>
+              <button onclick="filterCat('debt')" data-category="debt" aria-pressed="false" class="cat-btn px-2 py-1 rounded-md text-slate-600 hover:text-slate-900"><span data-i18n="负债">负债</span></button>
+            </div>
+
+            <div class="holdings-search relative">
+              <input type="text" id="assetSearchInput" oninput="handleSearch()" aria-label="搜索资产" placeholder="搜索名称、机构或备注" class="pl-7 pr-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 text-xs w-44 sm:w-52 transition-colors focus:bg-white focus:outline-hidden" data-i18n-aria-label="搜索资产" data-i18n-placeholder="搜索名称、机构或备注">
+              <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="max-h-[32rem] overflow-auto custom-scrollbar" tabindex="0" role="region" aria-label="资产清单，可滚动查看" data-i18n-aria-label="资产清单，可滚动查看">
+          <table class="holdings-table w-full min-w-[740px] table-fixed text-left text-xs text-slate-700">
+            <colgroup><col style="width:25%"><col style="width:11%"><col style="width:11%"><col style="width:17%"><col style="width:16%"><col style="width:20%"></colgroup>
+            <thead class="sticky top-0 z-10 bg-slate-50 text-slate-500 text-xs font-medium border-b border-slate-100">
+              <tr>
+                <th class="px-4 py-2.5"><span data-i18n="资产标的">资产标的</span></th>
+                <th class="px-3 py-2.5"><span data-i18n="类别">类别</span></th>
+                <th class="px-3 py-2.5"><span data-i18n="归属">归属</span></th>
+                <th class="px-3 py-2.5 text-right"><span data-i18n="当前金额">当前金额</span></th>
+                <th class="px-3 py-2.5 text-right"><span data-i18n="较上次更新">较上次更新</span></th>
+                <th class="px-4 py-2.5 text-right"><span data-i18n="操作">操作</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-sans" id="assetTableBody">
+
+            </tbody>
+          </table>
+
+          <div id="assetEmptyRow" class="hidden p-8 text-center text-slate-400 text-xs">
+            <p id="asset-empty-message"></p>
+            <button id="clear-asset-filters" onclick="clearAssetFilters()" class="hidden mt-3 px-3 py-2 rounded-lg border border-slate-200 text-indigo-700 font-medium" data-i18n="清除筛选">清除筛选</button>
+          </div>
+        </div>
+
+        <div class="px-4 py-2.5 bg-slate-50/80 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-2">
+          <div class="flex flex-wrap items-center space-x-3">
+            <span><span data-i18n="当前筛选资产:">当前筛选资产:</span> <strong class="text-slate-900 font-bold tabular-nums" id="subtotal-assets">—</strong></span>
+            <span class="text-slate-300">|</span>
+            <span><span data-i18n="负债:">负债:</span> <strong class="text-amber-800 font-bold tabular-nums" id="subtotal-debt">—</strong></span>
+            <span class="text-slate-300">|</span>
+            <span class="text-indigo-700 font-bold"><span data-i18n="净额:">净额:</span> <strong class="tabular-nums text-sm" id="subtotal-net">—</strong></span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="xl:col-span-4 bg-white p-4 ledger-panel border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2.5">
+            <h3 class="text-sm font-bold text-slate-900" id="activity-panel-title"><span data-i18n="全家近期变动">全家近期变动</span></h3>
+            <span class="text-xs text-slate-500"><span data-i18n="自动记录资产变更">自动记录资产变更</span></span>
+          </div>
+
+          <div class="space-y-2" id="recentChangesList">
+
+          </div>
+
+          <div id="activityEmptyState" class="hidden py-6 text-center text-slate-400 text-xs">
+            <span data-i18n="暂无变动记录，更新标的金额时将自动记入此处">暂无变动记录，更新标的金额时将自动记入此处</span>
+          </div>
+        </div>
+
+
+      </div>
+
+    </section>
+
+    </div>
+  </main>
+
+  <div id="valuationModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150" role="dialog" aria-modal="true" aria-labelledby="valModalTitle">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900" id="valModalTitle"><span data-i18n="更新资产最新金额">更新资产最新金额</span></h3>
+          <p class="text-xs text-slate-500" id="valModalSub"><span data-i18n="标的名称">标的名称</span></p>
+        </div>
+        <button onclick="closeModal('valuationModal')" id="btn-val-close" aria-label="关闭弹窗" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" data-i18n-aria-label="关闭弹窗">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      
+      <div class="space-y-3 text-xs">
+        <div>
+          <div class="flex items-center justify-between mb-0.5">
+            <span class="font-medium text-slate-600"><span data-i18n="原账面估值">原账面估值</span></span>
+            <button type="button" onclick="toggleValOldPeek()" id="btn-val-peek" class="text-indigo-600 text-xs hover:underline hidden"><span data-i18n="显示数值">显示数值</span></button>
+          </div>
+          <div class="font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl text-sm tabular-nums" id="valModalOldAmount">—</div>
+        </div>
+
+        <div>
+          <label for="valModalNewAmount" class="block font-bold text-slate-800 mb-0.5"><span data-currency-label="最新金额 / 最新估值（{0}）">最新金额 / 最新估值（CNY）</span> <span class="text-rose-500">*</span></label>
+          <div id="valModalPrivacyGuard" class="hidden p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1.5">
+            <p class="text-xs text-slate-500"><span data-i18n="金额处于隐私保护遮罩中">金额处于隐私保护遮罩中</span></p>
+            <button type="button" onclick="revealValuationInput()" id="btn-reveal-val-input" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg border border-indigo-200 transition"><span data-i18n="显示并编辑金额">显示并编辑金额</span></button>
+          </div>
+          <div id="valModalInputWrapper" class="relative">
+            <input type="number" id="valModalNewAmount" step="0.01" min="0" oninput="updateValuationPreview()" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-base font-semibold text-slate-900 focus:outline-hidden tabular-nums" placeholder="0.00">
+          </div>
+
+          <div id="valModalError" class="text-rose-600 text-xs mt-1 hidden font-medium"></div>
+        </div>
+
+        <div>
+          <label for="valModalReasonSelect" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="变动原因（可选）">变动原因（可选）</span></label>
+          <select id="valModalReasonSelect" onchange="updateValuationPreview()" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800 text-xs">
+            <option value="" selected data-i18n="余额更新">余额更新</option>
+          </select>
+          <label for="valModalRemark" class="block font-medium text-slate-700 mt-3 mb-0.5" data-i18n="备注说明">备注说明</label>
+          <input type="text" id="valModalRemark" oninput="updateValuationPreview()" class="w-full px-2.5 py-1 border border-slate-200 rounded-xl text-slate-800 text-xs placeholder-slate-400 mt-1.5" placeholder="备注说明 (可选，例如: 9月定投追加/冲减本金)" data-i18n-placeholder="备注说明 (可选，例如: 9月定投追加/冲减本金)">
+        </div>
+
+        <div id="valPreviewBox" class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5 text-xs">
+          <div class="text-[11px] font-bold text-slate-500 uppercase flex items-center justify-between">
+            <span><span data-i18n="金额变动预览">金额变动预览</span></span>
+          </div>
+          <div class="flex items-center justify-between tabular-nums">
+            <span class="text-slate-600"><span data-i18n="更新前后:">更新前后:</span></span>
+            <span class="font-bold text-slate-800" id="prev-flow">—</span>
+          </div>
+          <div class="flex items-center justify-between tabular-nums">
+            <span class="text-slate-600"><span data-i18n="变动差额:">变动差额:</span></span>
+            <strong class="text-slate-800 font-bold" id="prev-diff"><span data-i18n="持平">持平</span></strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog-actions mt-5 flex items-center justify-end space-x-2">
+        <button onclick="closeModal('valuationModal')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition min-h-[32px]"><span data-i18n="取消">取消</span></button>
+        <button onclick="saveValuationUpdate()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition min-h-[32px]"><span data-i18n="保存记录">保存记录</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="addAssetModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900" id="addModalTitle"><span data-i18n="新增资产标的">新增资产标的</span></h3>
+          <p class="text-xs text-slate-500"><span data-i18n="开立新账户、购入新基金或录入房产负债">开立新账户、购入新基金或录入房产负债</span></p>
+        </div>
+        <button onclick="closeModal('addAssetModal')" id="btn-add-close" aria-label="关闭弹窗" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" data-i18n-aria-label="关闭弹窗">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      
+      <div class="space-y-3 text-xs">
+        <div>
+          <label for="newAssetName" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="资产名称">资产名称</span> <span class="text-rose-500">*</span></label>
+          <input type="text" id="newAssetName" aria-describedby="addNameError" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800 focus:outline-hidden" placeholder="例如: 纳斯达克100ETF、招商银行工资卡" data-i18n-placeholder="例如: 纳斯达克100ETF、招商银行工资卡">
+          <div id="addNameError" class="text-rose-600 text-xs mt-0.5 hidden font-medium"><span data-i18n="请填写资产名称">请填写资产名称</span></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label for="newAssetCategory" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="配置大类">配置大类</span> <span class="text-rose-500">*</span></label>
+            <select id="newAssetCategory" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800">
+              <option value="cash" data-i18n="活钱管理">活钱管理</option>
+              <option value="fixed" data-i18n="稳健资产">稳健资产</option>
+              <option value="fund" data-i18n="权益资产">权益资产</option>
+              <option value="gold" data-i18n="黄金大宗">黄金大宗</option>
+              <option value="real" data-i18n="房产实物">房产实物</option>
+              <option value="debt" data-i18n="负债按揭">负债按揭</option>
+            </select>
+          </div>
+          <div>
+            <label for="newAssetOwner" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="归属人">归属人</span> <span class="text-rose-500">*</span></label>
+            <select id="newAssetOwner" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800">
+              <option value="p1" data-i18n="本人 (张先生)">本人 (张先生)</option>
+              <option value="p2" data-i18n="配偶 (李女士)">配偶 (李女士)</option>
+              <option value="share" data-i18n="家庭共有">家庭共有</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label for="newAssetInstitution" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="托管金融机构">托管金融机构</span></label>
+            <input type="text" id="newAssetInstitution" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800" placeholder="例如: 招商银行、华泰证券" data-i18n-placeholder="例如: 招商银行、华泰证券">
+          </div>
+          <div>
+            <label for="newAssetAmount" class="block font-bold text-slate-800 mb-0.5"><span data-currency-label="当前金额（{0}）">当前金额（CNY）</span> <span class="text-rose-500">*</span></label>
+            <input type="number" id="newAssetAmount" min="0" step="0.01" aria-describedby="addAmountError" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-900 font-bold tabular-nums" placeholder="0.00">
+            <div id="addAmountError" class="text-rose-600 text-xs mt-0.5 hidden font-medium"><span data-i18n="请填写有效金额">请填写有效金额</span></div>
+          </div>
+        </div>
+
+        <div>
+          <label for="newAssetNote" class="block font-medium text-slate-700 mb-0.5"><span data-i18n="备注说明">备注说明</span></label>
+          <input type="text" id="newAssetNote" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800" placeholder="例如: 长期定投持有、定期派息" data-i18n-placeholder="例如: 长期定投持有、定期派息">
+        </div>
+      </div>
+
+      <p id="add-feedback" role="alert" class="hidden text-xs text-rose-700 mt-3"></p>
+      <div class="dialog-actions mt-5 flex items-center justify-end space-x-2">
+        <button onclick="closeModal('addAssetModal')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition min-h-[32px]"><span data-i18n="取消">取消</span></button>
+        <button onclick="saveNewAsset()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition min-h-[32px]"><span data-i18n="确认保存">确认保存</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editAssetModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900" id="editModalTitle"><span data-i18n="编辑资产标的信息">编辑资产标的信息</span></h3>
+          <p class="text-xs text-slate-500"><span data-i18n="修改标的基本属性（金额请通过“更新金额”修改）">修改标的基本属性（金额请通过“更新金额”修改）</span></p>
+        </div>
+        <button onclick="closeModal('editAssetModal')" aria-label="关闭弹窗" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" data-i18n-aria-label="关闭弹窗">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label for="editAssetName" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="标的名称">标的名称</span></label>
+          <input type="text" id="editAssetName" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label for="editAssetCategory" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="配置大类">配置大类</span></label>
+            <select id="editAssetCategory" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800">
+              <option value="cash" data-i18n="活钱管理">活钱管理</option>
+              <option value="fixed" data-i18n="稳健资产">稳健资产</option>
+              <option value="fund" data-i18n="权益资产">权益资产</option>
+              <option value="gold" data-i18n="黄金大宗">黄金大宗</option>
+              <option value="real" data-i18n="房产实物">房产实物</option>
+              <option value="debt" data-i18n="负债按揭">负债按揭</option>
+            </select>
+          </div>
+          <div>
+            <label for="editAssetOwner" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="归属人">归属人</span></label>
+            <select id="editAssetOwner" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800">
+              <option value="p1" data-i18n="本人 (张先生)">本人 (张先生)</option>
+              <option value="p2" data-i18n="配偶 (李女士)">配偶 (李女士)</option>
+              <option value="share" data-i18n="家庭共有">家庭共有</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="editAssetInstitution" class="block font-bold text-slate-800 mb-0.5"><span data-i18n="托管金融机构">托管金融机构</span></label>
+          <input type="text" id="editAssetInstitution" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800">
+        </div>
+        <div>
+          <label for="editAssetNote" class="block font-medium text-slate-700 mb-0.5"><span data-i18n="备注说明">备注说明</span></label>
+          <input type="text" id="editAssetNote" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-slate-800">
+        </div>
+      </div>
+
+      <p id="edit-feedback" role="alert" class="hidden text-xs text-rose-700 mt-3"></p>
+      <div class="dialog-actions mt-5 flex items-center justify-end space-x-2">
+        <button onclick="closeModal('editAssetModal')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition min-h-[32px]"><span data-i18n="取消">取消</span></button>
+        <button onclick="saveEditAsset()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition min-h-[32px]"><span data-i18n="保存修改">保存修改</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="targetConfigModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150" role="dialog" aria-modal="true" aria-labelledby="targetModalTitle">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900" id="targetModalTitle"><span data-i18n="设置大类资产目标区间">设置大类资产目标区间</span></h3>
+          <p class="text-xs text-slate-500"><span data-i18n="依据您的家庭风险偏好调整建议基准（总和应为100%左右）">依据您的家庭风险偏好调整建议基准（总和应为100%左右）</span></p>
+        </div>
+        <button onclick="closeModal('targetConfigModal')" aria-label="关闭弹窗" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" data-i18n-aria-label="关闭弹窗">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+          <span class="font-bold text-cyan-700"><span data-i18n="活钱管理">活钱管理</span></span>
+          <div class="flex items-center space-x-1 shrink-0 whitespace-nowrap">
+            <input type="number" id="cfg-cash-min" min="0" max="100" step="any" aria-label="活钱目标下限（%）" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-center" value="5" data-i18n-aria-label="活钱目标下限（%）">% ~
+            <input type="number" id="cfg-cash-max" min="0" max="100" step="any" aria-label="活钱目标上限（%）" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-center" value="15" data-i18n-aria-label="活钱目标上限（%）">%
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+          <span class="font-bold text-emerald-700"><span data-i18n="稳健资产">稳健资产</span></span>
+          <div class="flex items-center space-x-1 shrink-0 whitespace-nowrap">
+            <input type="number" id="cfg-fixed-min" min="0" max="100" step="any" aria-label="稳健目标下限（%）" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-center" value="30" data-i18n-aria-label="稳健目标下限（%）">% ~
+            <input type="number" id="cfg-fixed-max" min="0" max="100" step="any" aria-label="稳健目标上限（%）" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-center" value="50" data-i18n-aria-label="稳健目标上限（%）">%
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+          <span class="font-bold text-indigo-700"><span data-i18n="权益资产">权益资产</span></span>
+          <div class="flex items-center space-x-1 shrink-0 whitespace-nowrap">
+            <input type="number" id="cfg-equity-min" min="0" max="100" step="any" aria-label="权益目标下限（%）" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-center" value="20" data-i18n-aria-label="权益目标下限（%）">% ~
+            <input type="number" id="cfg-equity-max" min="0" max="100" step="any" aria-label="权益目标上限（%）" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-center" value="40" data-i18n-aria-label="权益目标上限（%）">%
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50">
+          <span class="font-bold text-amber-700"><span data-i18n="黄金大宗">黄金大宗</span></span>
+          <div class="flex items-center space-x-1 shrink-0 whitespace-nowrap">
+            <input type="number" id="cfg-gold-min" min="0" max="100" step="any" aria-label="黄金目标下限（%）" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-center" value="5" data-i18n-aria-label="黄金目标下限（%）">% ~
+            <input type="number" id="cfg-gold-max" min="0" max="100" step="any" aria-label="黄金目标上限（%）" class="w-14 px-2 py-1 border border-slate-200 rounded-lg text-center" value="15" data-i18n-aria-label="黄金目标上限（%）">%
+          </div>
+        </div>
+      </div>
+
+      <p id="target-feedback" role="alert" class="hidden text-xs text-rose-700 mt-3"></p>
+      <div class="dialog-actions mt-5 flex items-center justify-end space-x-2">
+        <button onclick="closeModal('targetConfigModal')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition min-h-[32px]"><span data-i18n="取消">取消</span></button>
+        <button onclick="saveTargetConfig()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition min-h-[32px]"><span data-i18n="保存目标">保存目标</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dataModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150" role="dialog" aria-modal="true" aria-labelledby="dataModalTitle">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900" id="dataModalTitle"><span data-i18n="数据管理与本地备份">数据管理与本地备份</span></h3>
+          <p class="text-xs text-slate-500"><span data-i18n="账本数据保存在您本地浏览器中，请定期导出备份">账本数据保存在您本地浏览器中，请定期导出备份</span></p>
+        </div>
+        <button onclick="closeModal('dataModal')" aria-label="关闭弹窗" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" data-i18n-aria-label="关闭弹窗">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+          <div class="flex justify-between">
+            <span class="text-slate-600"><span data-i18n="当前存储状态:">当前存储状态:</span></span>
+            <strong id="storage-status" class="text-emerald-700"><span data-i18n="已保存至当前浏览器">已保存至当前浏览器</span></strong>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600"><span data-i18n="上次备份时间:">上次备份时间:</span></span>
+            <strong class="text-slate-800" id="data-modal-last-backup"><span data-i18n="从未备份">从未备份</span></strong>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600"><span data-i18n="标的数量:">标的数量:</span></span>
+            <span id="data-modal-asset-count"><span data-i18n="14 项">14 项</span></span>
+          </div>
+        </div>
+
+        <p id="data-feedback" role="status" aria-live="polite" class="hidden text-xs text-rose-700"></p>
+        <div class="space-y-2 pt-1">
+          <button onclick="exportBackupJson()" class="w-full py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center space-x-1.5 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span><span data-i18n="导出 JSON 备份文件">导出 JSON 备份文件</span></span>
+          </button>
+          
+          <button type="button" id="btn-import-backup" onclick="triggerImportFileInput()" class="w-full py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold flex items-center justify-center space-x-1.5 cursor-pointer transition focus:outline-hidden">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"></path></svg>
+            <span><span data-i18n="从备份文件恢复数据">从备份文件恢复数据</span></span>
+          </button>
+          <input type="file" id="importFileInput" accept=".json" onchange="handleImportFileSelected(event)" hidden tabindex="-1">
+
+          <button onclick="viewDemo()" class="w-full py-2 px-3 rounded-xl text-indigo-700 hover:bg-indigo-50 font-medium transition text-xs">
+            <span data-i18n="查看示例">查看示例</span>
+          </button>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900" id="settingsModalTitle"><span data-i18n="成员设置">成员设置</span></h3>
+          <p class="text-xs text-slate-500"><span data-i18n="设置家庭成员姓名">设置家庭成员姓名</span></p>
+        </div>
+        <button onclick="closeModal('settingsModal')" aria-label="关闭弹窗" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" data-i18n-aria-label="关闭弹窗">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs">
+        <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100/80 text-indigo-900 space-y-1">
+          <div class="font-bold flex items-center space-x-1.5">
+            <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span><span data-i18n="修改姓名不会改变资产归属">修改姓名不会改变资产归属</span></span>
+          </div>
+          <p class="text-[11px] text-indigo-700 leading-relaxed">
+            <span data-i18n="这里维护本人和配偶的显示姓名。“全家”汇总所有资产，“共有”展示共同持有的资产。修改姓名不会改变金额、归属或历史记录。">这里维护本人和配偶的显示姓名。“全家”汇总所有资产，“共有”展示共同持有的资产。修改姓名不会改变金额、归属或历史记录。</span>
+          </p>
+        </div>
+
+        <div>
+          <label for="settingP1Name" class="block font-bold text-slate-800 mb-1"><span data-i18n="本人姓名 / 昵称">本人姓名 / 昵称</span> <span class="text-rose-500">*</span></label>
+          <input type="text" id="settingP1Name" aria-describedby="settingP1Error" maxlength="12" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-hidden" placeholder="例如: 张先生 / 爸爸" data-i18n-placeholder="例如: 张先生 / 爸爸">
+          <div role="alert" id="settingP1Error" class="text-rose-600 text-xs mt-1 hidden font-medium"></div>
+        </div>
+
+        <div>
+          <label for="settingP2Name" class="block font-bold text-slate-800 mb-1"><span data-i18n="配偶姓名 / 昵称">配偶姓名 / 昵称</span> <span class="text-rose-500">*</span></label>
+          <input type="text" id="settingP2Name" aria-describedby="settingP2Error" maxlength="12" class="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-hidden" placeholder="例如: 李女士 / 妈妈" data-i18n-placeholder="例如: 李女士 / 妈妈">
+          <div role="alert" id="settingP2Error" class="text-rose-600 text-xs mt-1 hidden font-medium"></div>
+        </div>
+      </div>
+
+      <p id="settings-feedback" role="alert" class="hidden text-xs text-rose-700 mt-3"></p>
+      <div class="dialog-actions mt-5 pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+        <button onclick="closeModal('settingsModal')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition min-h-[32px]"><span data-i18n="取消">取消</span></button>
+        <button onclick="saveSettings()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition min-h-[32px]"><span data-i18n="保存设置">保存设置</span></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 默认演示资产数据；负债单独记录
+    const DEMO_ASSETS = [
+      // 活钱管理
+      { id: 1, name: "招商银行工资卡活期", category: "cash", owner: "p1", institution: "招商银行", amount: 180000, lastDiff: 15000, updatedAt: "2026-09-15", note: "日常工资收入主卡" },
+      { id: 2, name: "微信理财通活期+", category: "cash", owner: "p2", institution: "腾讯理财通", amount: 120000, lastDiff: 4000, updatedAt: "2026-09-14", note: "家庭日用备用金" },
+      { id: 3, name: "支付宝余额宝", category: "cash", owner: "p1", institution: "蚂蚁金服", amount: 160000, lastDiff: -2000, updatedAt: "2026-09-10", note: "高频日常流动资金" },
+
+      // 稳健资产
+      { id: 4, name: "招银理财稳添益固收", category: "fixed", owner: "p2", institution: "招商银行", amount: 550000, lastDiff: 2100, updatedAt: "2026-09-10", note: "R2低波半年期，年化约3.1%" },
+      { id: 5, name: "工行3年期大额存单", category: "fixed", owner: "share", institution: "工商银行", amount: 380000, lastDiff: 0, updatedAt: "2026-09-01", note: "年化 2.75%，安全底仓" },
+      { id: 6, name: "终身寿险保单现价", category: "fixed", owner: "p1", institution: "平安人寿", amount: 180000, lastDiff: 1200, updatedAt: "2026-09-01", note: "保单现金价值累计" },
+
+      // 权益资产
+      { id: 7, name: "易方达沪深300指数增强", category: "fund", owner: "p1", institution: "华泰证券", amount: 620000, lastDiff: 24000, updatedAt: "2026-09-15", note: "A股宽基核心定投标的" },
+      { id: 8, name: "纳斯达克100ETF联接", category: "fund", owner: "p2", institution: "蚂蚁财富", amount: 480000, lastDiff: 18000, updatedAt: "2026-09-14", note: "全球科技核心成长底仓" },
+      { id: 9, name: "腾讯控股股票", category: "fund", owner: "p1", institution: "富途证券", amount: 450000, lastDiff: -8000, updatedAt: "2026-09-15", note: "优质高分红核心蓝筹" },
+
+      // 黄金大宗
+      { id: 10, name: "工行实物积存金", category: "gold", owner: "share", institution: "工商银行", amount: 200000, lastDiff: 8500, updatedAt: "2026-09-12", note: "实物金积存，抗通胀避险" },
+      { id: 11, name: "易方达黄金ETF", category: "gold", owner: "p1", institution: "华泰证券", amount: 100000, lastDiff: 3500, updatedAt: "2026-09-10", note: "场内流动性黄金配置" },
+
+      // 房产实物 (公允市场总估值，不预扣房贷)
+      { id: 12, name: "自住商品房 (公允总估值)", category: "real", owner: "share", institution: "不动产登记", amount: 3500000, lastDiff: 0, updatedAt: "2026-09-01", note: "市场公允总市值，按揭列入负债" },
+
+      // 负债按揭
+      { id: 13, name: "自住房商业住房按揭贷款", category: "debt", owner: "share", institution: "建设银行", amount: 1500000, lastDiff: -8500, updatedAt: "2026-09-15", note: "商业按揭剩余本金", isLiability: true },
+      { id: 14, name: "招行信用卡当期账单", category: "debt", owner: "p1", institution: "招商银行", amount: 67600, lastDiff: 1200, updatedAt: "2026-09-15", note: "免息期内全额自动扣划", isLiability: true }
+    ];
+
+    // 多成员历史时间序列数据 (真实日期时间比例)
+    const DEMO_HISTORY = {
+      all: [
+        { date: "2021-06-30", month: "2021.06", totalAssets: 4800000, liabilities: 1950000, netWorth: 2850000 },
+        { date: "2021-12-31", month: "2021.12", totalAssets: 5050000, liabilities: 1900000, netWorth: 3150000 },
+        { date: "2022-06-30", month: "2022.06", totalAssets: 5200000, liabilities: 1850000, netWorth: 3350000 },
+        { date: "2022-12-31", month: "2022.12", totalAssets: 5400000, liabilities: 1800000, netWorth: 3600000 },
+        { date: "2023-06-30", month: "2023.06", totalAssets: 5700000, liabilities: 1750000, netWorth: 3950000 },
+        { date: "2023-12-31", month: "2023.12", totalAssets: 5950000, liabilities: 1720000, netWorth: 4230000 },
+        { date: "2024-06-30", month: "2024.06", totalAssets: 6150000, liabilities: 1690000, netWorth: 4460000 },
+        { date: "2024-12-31", month: "2024.12", totalAssets: 6350000, liabilities: 1660000, netWorth: 4690000 },
+        { date: "2025-06-30", month: "2025.06", totalAssets: 6550000, liabilities: 1620000, netWorth: 4930000 },
+        { date: "2025-10-31", month: "2025.10", totalAssets: 6680000, liabilities: 1605000, netWorth: 5075000 },
+        { date: "2025-12-31", month: "2025.12", totalAssets: 6740000, liabilities: 1595000, netWorth: 5145000 },
+        // 2026 年初至今 (今年以来)
+        { date: "2026-01-01", month: "2026.01", totalAssets: 6644000, liabilities: 1590000, netWorth: 5054000 },
+        { date: "2026-03-31", month: "2026.03", totalAssets: 6730000, liabilities: 1583000, netWorth: 5147000 },
+        { date: "2026-05-31", month: "2026.05", totalAssets: 6810000, liabilities: 1577000, netWorth: 5233000 },
+        { date: "2026-07-31", month: "2026.07", totalAssets: 6870000, liabilities: 1572000, netWorth: 5298000 },
+        { date: "2026-08-31", month: "2026.08", totalAssets: 6890000, liabilities: 1569000, netWorth: 5321000 },
+        { date: "2026-09-16", month: "2026.09", totalAssets: 6920000, liabilities: 1567600, netWorth: 5352400 }
+      ],
+      p1: [
+        { date: "2026-01-01", month: "2026.01", totalAssets: 1550000, liabilities: 72000, netWorth: 1478000 },
+        { date: "2026-03-31", month: "2026.03", totalAssets: 1590000, liabilities: 70000, netWorth: 1520000 },
+        { date: "2026-06-30", month: "2026.06", totalAssets: 1630000, liabilities: 68000, netWorth: 1562000 },
+        { date: "2026-09-16", month: "2026.09", totalAssets: 1690000, liabilities: 67600, netWorth: 1622400 }
+      ],
+      p2: [
+        { date: "2026-01-01", month: "2026.01", totalAssets: 1040000, liabilities: 0, netWorth: 1040000 },
+        { date: "2026-04-30", month: "2026.04", totalAssets: 1080000, liabilities: 0, netWorth: 1080000 },
+        { date: "2026-09-16", month: "2026.09", totalAssets: 1150000, liabilities: 0, netWorth: 1150000 }
+      ],
+      share: [
+        { date: "2026-01-01", month: "2026.01", totalAssets: 4054000, liabilities: 1518000, netWorth: 2536000 },
+        { date: "2026-09-16", month: "2026.09", totalAssets: 4080000, liabilities: 1500000, netWorth: 2580000 }
+      ]
+    };
+
+    // 默认演示变动记录
+    const DEMO_LOGS = [
+      { id: 1, owner: "p1", date: "2026-09-15", assetName: "易方达沪深300指数增强", diff: 24000, type: "估值变动", isIncome: true, desc: "A股宽基行情浮盈回升" },
+      { id: 2, owner: "p1", date: "2026-09-15", assetName: "招商银行工资卡活期", diff: 15000, type: "资金存入", isIncome: false, desc: "9月份储蓄净结余转入" },
+      { id: 3, owner: "share", date: "2026-09-12", assetName: "工行实物积存金", diff: 8500, type: "估值变动", isIncome: true, desc: "国际金价上涨与定投追加" },
+      { id: 4, owner: "share", date: "2026-09-08", assetName: "自住房商业住房按揭贷款", diff: -8500, type: "偿还本金", isIncome: false, isLiability: true, desc: "按期冲减房贷本金" },
+      { id: 5, owner: "p2", date: "2026-08-25", assetName: "招银理财稳添益固收", diff: 2100, type: "分红收益", isIncome: true, desc: "半年度现金分红结转到账" }
+    ];
+
+    // 默认配置目标
+    const DEMO_TARGETS = {
+      cash: { min: 5, max: 15 },
+      fixed: { min: 30, max: 50 },
+      fund: { min: 20, max: 40 },
+      gold: { min: 5, max: 15 }
+    };
+
+    // 默认家庭成员配置 (稳定 ID: p1, p2)
+    const DEFAULT_MEMBERS = {
+      p1: { id: "p1", name: "张先生", role: "本人" },
+      p2: { id: "p2", name: "李女士", role: "配偶" }
+    };
+
+    // 本地持久化储存 Key
+    const STORAGE_KEY = "family_asset_ledger_v2";
+    const CURRENCY_CODES = Object.freeze('AED AFN ALL AMD ANG AOA ARS AUD AWG AZN BAM BBD BDT BGN BHD BIF BMD BND BOB BRL BSD BTN BWP BYN BZD CAD CDF CHF CLP CNY COP CRC CUC CUP CVE CZK DJF DKK DOP DZD EGP ERN ETB EUR FJD FKP GBP GEL GHS GIP GMD GNF GTQ GYD HKD HNL HRK HTG HUF IDR ILS INR IQD IRR ISK JMD JOD JPY KES KGS KHR KMF KPW KRW KWD KYD KZT LAK LBP LKR LRD LSL LYD MAD MDL MGA MKD MMK MNT MOP MRU MUR MVR MWK MXN MYR MZN NAD NGN NIO NOK NPR NZD OMR PAB PEN PGK PHP PKR PLN PYG QAR RON RSD RUB RWF SAR SBD SCR SDG SEK SGD SHP SLE SLL SOS SRD SSP STN SVC SYP SZL THB TJS TMT TND TOP TRY TTD TWD TZS UAH UGX USD UYU UZS VES VND VUV WST XAF XCD XCG XDR XOF XPF XSU YER ZAR ZMW ZWG ZWL'.split(' '));
+
+    // 运行时全局状态
+    let state = {
+      currency: 'CNY',
+      members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
+      assets: [],
+      history: {},
+      logs: [],
+      targets: {},
+      selectedMember: 'all',
+      selectedCategory: 'all',
+      searchQuery: '',
+      isPrivacy: false,
+      horizon: 'ytd', // ytd | 1y | 3y | all
+      showAssetsSeries: false,
+      showDebtSeries: false,
+      lastBackupTime: null,
+      editingAssetId: null,
+      activeModalTriggerBtn: null
+    };
+    let personalLedgerState = null;
+
+    function createEmptyLedger() {
+      return {
+        currency: 'CNY',
+        members: {p1:{id:'p1',name:t('成员 1'),role:'本人'},p2:{id:'p2',name:t('成员 2'),role:'配偶'}},
+        assets: [], logs: [], history: {all:[],p1:[],p2:[],share:[]},
+        targets: cloneData(DEMO_TARGETS), lastBackupTime: null
+      };
+    }
+
+    function isEmptyLedger(data = state) {
+      return data.assets.length === 0 && data.logs.length === 0 &&
+        ['all','p1','p2','share'].every(id => !data.history[id]?.length);
+    }
+
+    function updateHomeState() {
+      const empty = !state.isDemo && !state.storageReadError && isEmptyLedger();
+      document.getElementById('welcomePanel').classList.toggle('hidden', !empty);
+      document.getElementById('ledgerContent').classList.toggle('hidden', empty);
+      document.getElementById('headerControls').classList.toggle('hidden', empty);
+      document.getElementById('header-subtitle').classList.toggle('hidden', empty);
+      document.getElementById('demoBanner').classList.toggle('hidden', !state.isDemo);
+      document.getElementById('data-status-badge').textContent = t(state.isDemo ? '示例预览 · 只读' : state.storageReadError ? '读取失败 · 原数据已保留' : empty ? '空账本' : '本地已保存');
+      document.querySelectorAll('[data-ledger-write]').forEach(el => { el.disabled = Boolean(state.isDemo); });
+    }
+
+    function syncViewControls() {
+      document.getElementById('assetSearchInput').value = state.searchQuery;
+      document.getElementById('chk-show-assets').checked = state.showAssetsSeries;
+      document.getElementById('chk-show-debt').checked = state.showDebtSeries;
+      updatePrivacyButton();
+      filterCat(state.selectedCategory);
+      setChartHorizon(state.horizon);
+      setMember(state.selectedMember);
+    }
+
+    function viewDemo() {
+      if (state.isDemo) return;
+      closeModal('dataModal');
+      personalLedgerState = state;
+      state = {...state, ...createDemoLedger(), isDemo:true, storageReadError:false,
+        selectedMember:'all', selectedCategory:'all', searchQuery:'', horizon:'ytd',
+        isPrivacy:false, showAssetsSeries:false, showDebtSeries:false, revealedLogIds:new Set()};
+      syncViewControls();
+      document.getElementById('exit-demo').focus();
+    }
+
+    function exitDemo() {
+      if (!personalLedgerState) return;
+      state = personalLedgerState;
+      personalLedgerState = null;
+      if (state.isNewLedger) state.members = createEmptyLedger().members;
+      syncViewControls();
+      const target = isEmptyLedger() ? document.getElementById('welcomeTitle') : document.getElementById('header-main-title');
+      target.setAttribute('tabindex', '-1');
+      target.focus();
+    }
+
+    function cloneData(value) { return JSON.parse(JSON.stringify(value)); }
+    function roundMoney(value) { return Math.round((value + Number.EPSILON) * 100) / 100 || 0; }
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+    }
+    function institutionLabel(value) { return value === '自主管理' ? t('自主管理') : value; }
+    function logDescription(log) {
+      if (!log.desc) return t('常规变动录入');
+      return log.desc === log.type || ['按期偿还负债本金', '新增负债账目录入', '新增资产标的入账建仓'].includes(log.desc) ? t(log.desc) : log.desc;
+    }
+    function validMoney(value) { return typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER / 100; }
+    function localDate() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function resolveMembers(value, fallback = DEFAULT_MEMBERS) {
+      if (value === undefined) {
+        try { return resolveMembers(fallback, DEFAULT_MEMBERS); }
+        catch { return cloneData(DEFAULT_MEMBERS); }
+      }
+      if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(t("成员配置格式不正确。"));
+      const result = {};
+      for (const id of ['p1','p2']) {
+        const member = value[id];
+        if (!member || typeof member.name !== 'string' || !member.name.trim() || member.name.trim().length > 12) throw new Error(t("成员姓名须为 1–12 个字符。"));
+        if (member.id !== undefined && member.id !== id) throw new Error(t("成员 ID 与资产归属不匹配。"));
+        result[id] = {id, name: member.name.trim(), role: id === 'p1' ? '本人' : '配偶'};
+      }
+      return result;
+    }
+    function ledgerPayload(data = state) {
+      return {currency:resolveCurrency(data.currency), members:data.members, assets:data.assets, history:data.history, logs:data.logs, targets:data.targets, lastBackupTime:data.lastBackupTime || null, savedAt:new Date().toISOString()};
+    }
+    function requireReadableLedger() {
+      if (state.storageReadError) throw new Error(t("当前账本读取失败，请先恢复有效备份。原始数据未修改。"));
+    }
+    function nextRecordId(records) {
+      const id = records.reduce((next, record) => Math.max(next, record.id + 1), Date.now());
+      if (!Number.isSafeInteger(id)) throw new Error(t("记录 ID 已超出支持范围。"));
+      return id;
+    }
+    // 校验并写入成功后，才替换运行时账本；恢复备份可解除读取错误。
+    function commitLedger(next, {allowRecovery = false} = {}) {
+      if (state.isDemo) throw new Error(t('示例仅供查看，请返回自己的账本后编辑。'));
+      if (!allowRecovery) requireReadableLedger();
+      const payload = ledgerPayload(next);
+      prepareBackup(payload, next.members);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      state.currency = payload.currency;
+      for (const key of ['members','assets','history','logs','targets','lastBackupTime']) state[key] = next[key];
+      state.storageReadError = false;
+      state.isNewLedger = false;
+      document.getElementById('data-status-badge').textContent = t("本地已保存");
+    }
+    function feedback(id, message) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = message;
+      el.classList.toggle('hidden', !message);
+    }
+
+    function initDataStore() {
+      personalLedgerState = null;
+      state.isDemo = false;
+      state.isNewLedger = false;
+      try {
+        const local = localStorage.getItem(STORAGE_KEY);
+        if (local === null) {
+          Object.assign(state, createEmptyLedger(), {storageReadError:false, isNewLedger:true});
+          return;
+        }
+        const parsed = JSON.parse(local);
+        const loaded = prepareBackup(parsed, DEFAULT_MEMBERS);
+        Object.assign(state, loaded, {lastBackupTime: parsed.lastBackupTime || null, storageReadError:false});
+        document.getElementById('data-status-badge').textContent = t("本地已保存");
+      } catch (error) {
+        // Keep unreadable saved content untouched so it can still be recovered.
+        state.currency = 'CNY'; state.assets = []; state.history = {all:[],p1:[],p2:[],share:[]}; state.logs = [];
+        state.targets = cloneData(DEMO_TARGETS); state.members = cloneData(DEFAULT_MEMBERS);
+        state.storageReadError = true;
+        document.getElementById('data-status-badge').textContent = t("读取失败 · 原数据已保留");
+        alert(t("本地账本暂时无法读取，原始数据已保留。请通过“数据管理”恢复有效备份。\n") + error.message);
+      }
+    }
+
+    function createDemoLedger() {
+      const next = {currency:state.currency, members:cloneData(DEFAULT_MEMBERS), assets:cloneData(DEMO_ASSETS), history:cloneData(DEMO_HISTORY), logs:cloneData(DEMO_LOGS), targets:cloneData(DEMO_TARGETS), lastBackupTime:null};
+      if (language === 'en') {
+        next.members.p1.name = 'Alex'; next.members.p2.name = 'Sam';
+        const names = new Map();
+        next.assets.forEach(asset => {
+          const [name, institution, note] = EN_DEMO_ASSETS[asset.id];
+          names.set(asset.name, name);
+          Object.assign(asset, {name, institution, note});
+        });
+        next.logs.forEach(log => {
+          log.assetName = names.get(log.assetName) || log.assetName;
+          log.desc = EN_DEMO_LOG_NOTES[log.id] || log.desc;
+        });
+      }
+      return next;
+    }
+
+    function resolveCurrency(value) {
+      if (value === undefined) return 'CNY';
+      if (typeof value !== 'string' || !CURRENCY_CODES.includes(value)) throw new Error(t('币种无效，请选择列表中的币种。'));
+      return value;
+    }
+
+    const currencySymbolCache = new Map();
+    function currencySymbol() {
+      const code = resolveCurrency(state.currency);
+      const key = `${numberLocale()}:${code}`;
+      if (!currencySymbolCache.has(key)) {
+        const parts = new Intl.NumberFormat(numberLocale(), {style:'currency', currency:code, currencyDisplay:'narrowSymbol'}).formatToParts(0);
+        currencySymbolCache.set(key, parts.find(part => part.type === 'currency')?.value || code);
+      }
+      return currencySymbolCache.get(key);
+    }
+
+    function populateCurrencyOptions() {
+      const select = document.getElementById('currencySelect');
+      const common = ['CNY','USD','EUR','GBP','JPY','HKD','TWD','AUD','CAD','CHF','SGD','NZD','KRW','INR'];
+      let names;
+      try { names = new Intl.DisplayNames([numberLocale()], {type:'currency'}); } catch { /* Codes remain usable without localized names. */ }
+      select.innerHTML = [...common, ...CURRENCY_CODES.filter(code => !common.includes(code))].map(code => {
+        const name = names?.of(code) || code;
+        const label = code === state.currency || code === name ? code : `${code} · ${name}`;
+        return `<option value="${code}">${escapeHtml(label)}</option>`;
+      }).join('');
+      select.value = state.currency;
+    }
+
+    function updateCurrencyLabels() {
+      populateCurrencyOptions();
+      document.querySelectorAll('[data-currency-label]').forEach(el => { el.textContent = t(el.dataset.currencyLabel, [state.currency]); });
+      // A previous hover must not keep showing the old currency after a change.
+      document.getElementById('chartTooltip').classList.add('hidden');
+    }
+
+    function setCurrency(nextCurrency) {
+      feedback('preferences-feedback', '');
+      try {
+        const currency = resolveCurrency(nextCurrency);
+        if (currency !== state.currency) {
+          commitLedger({...ledgerPayload(), currency});
+          refreshAllViews();
+        }
+      } catch (error) {
+        feedback('preferences-feedback', error.message);
+      }
+      // Failed writes keep the visible selection in sync with the saved ledger.
+      updateCurrencyLabels();
+    }
+
+    function fmtMoney(amount, reveal = false) {
+      if (state.isPrivacy && !reveal) return `${currencySymbol()} ••••••`;
+      const formatted = currencySymbol() + " " + Math.abs(amount).toLocaleString(numberLocale(), { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      return (amount < 0) ? "- " + formatted : formatted;
+    }
+
+    // 统一“今年以来”基准获取 (卡片与走势图严格共用同一基准)
+    function getYtdBaseline(memberHistory, currentYear) {
+      if (!memberHistory || memberHistory.length === 0) {
+        return { status: 'missing', baseline: null, label: t("年初基准缺失"), startDate: null, isTrueYearStart: false };
+      }
+
+      // 1. 优先寻找当年 1月1日 (真实开年基准)
+      const jan1 = memberHistory.find(d => d.date === `${currentYear}-01-01`);
+      if (jan1) {
+        return { status: 'ok', baseline: jan1, startDate: jan1.date, label: t("今年以来增长"), isTrueYearStart: true };
+      }
+
+      // 2. 其次寻找上一年度 12月31日 (标准会计年末结转)
+      const dec31 = memberHistory.find(d => d.date === `${currentYear - 1}-12-31`);
+      if (dec31) {
+        return { status: 'ok', baseline: dec31, startDate: dec31.date, label: t("今年以来增长"), isTrueYearStart: true };
+      }
+
+      // 3. 若无 12-31 也无 01-01，寻找当年最早的一条记录（非完整年初，明确注明）
+      const curYearHistory = memberHistory.filter(d => d.date.startsWith(`${currentYear}-`));
+      if (curYearHistory.length > 0) {
+        const earliest = curYearHistory[0];
+        return { status: 'partial', baseline: earliest, startDate: earliest.date, label: t("自 {0} 起", [earliest.date]), isTrueYearStart: false };
+      }
+
+      // 4. 往年非年末记录不可作为今年基准
+      return { status: 'missing', baseline: null, label: t("年初基准缺失"), startDate: null, isTrueYearStart: false };
+    }
+
+    // 年度增长卡片使用独立于图表周期的基准
+    function updateYtdGrowthCard() {
+      const labelEl = document.getElementById('stat-ytd-growth-label');
+      const valEl = document.getElementById('stat-ytd-growth-val');
+      if (!labelEl || !valEl) return;
+
+      const currentYear = new Date().getFullYear();
+      const curAssets = state.assets.filter(a => state.selectedMember === 'all' || a.owner === state.selectedMember);
+      const currentNet = curAssets.filter(a => !a.isLiability).reduce((s, a) => s + a.amount, 0) - curAssets.filter(a => a.isLiability).reduce((s, a) => s + a.amount, 0);
+
+      const memberHistory = (state.history && state.history[state.selectedMember]) || [];
+      const baseInfo = getYtdBaseline(memberHistory, currentYear);
+
+      if (baseInfo.status === 'missing' || !baseInfo.baseline) {
+        labelEl.textContent = baseInfo.label;
+        valEl.textContent = "—";
+        valEl.className = "text-slate-400 font-bold";
+        valEl.title = t("暂无年初或当年基准数据");
+        return;
+      }
+
+      const startNet = baseInfo.baseline.netWorth;
+      const diffNet = currentNet - startNet;
+      const pctNet = startNet > 0 ? ((diffNet / startNet) * 100).toFixed(1) : "0.0";
+      const sign = diffNet >= 0 ? "+" : "";
+
+      labelEl.textContent = baseInfo.label;
+
+      if (state.isPrivacy) {
+        valEl.textContent = "••••";
+      } else {
+        valEl.textContent = `${sign}${fmtMoney(diffNet)} (${sign}${pctNet}%)`;
+      }
+      valEl.className = diffNet >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold";
+      valEl.title = t("基准日: {0} (基准净资产: {1}) · 至今", [baseInfo.startDate, fmtMoney(startNet)]);
+    }
+
+    // 按当年收益日志计算已记录收益
+    function updateIncomeCard(currentAssets) {
+      if (!currentAssets) {
+        currentAssets = state.assets.filter(a => state.selectedMember === 'all' || a.owner === state.selectedMember);
+      }
+      const incomeEl = document.getElementById('stat-ytd-income');
+      const yieldEl = document.getElementById('stat-yield-rate');
+      const subtextEl = document.getElementById('stat-pnl-subtext');
+      if (!incomeEl || !yieldEl) return;
+
+      const currentYear = new Date().getFullYear();
+      const yearStr = String(currentYear);
+
+      // 仅汇算当年、当前成员、明确标记为投资收益 (isIncome === true) 的日志
+      const incomeLogs = state.logs.filter(l => {
+        const matchesMember = (state.selectedMember === 'all' || l.owner === state.selectedMember);
+        const matchesYear = l.date && l.date.startsWith(yearStr);
+        return matchesMember && matchesYear && l.isIncome === true;
+      });
+
+      const finInvestable = currentAssets.filter(a => ['cash', 'fixed', 'fund', 'gold'].includes(a.category)).reduce((s, a) => s + a.amount, 0);
+
+      if (incomeLogs.length === 0) {
+        incomeEl.textContent = "—";
+        incomeEl.className = "text-2xl sm:text-3xl font-semibold tracking-tight text-slate-400";
+        yieldEl.textContent = t("占金融资产 —");
+        yieldEl.title = t("当年暂无收益变动记录");
+        yieldEl.className = "text-xs px-2 py-0.5 rounded-md font-semibold border bg-slate-50 text-slate-500 border-slate-200 shrink-0 cursor-help";
+        if (subtextEl) {
+          subtextEl.innerHTML = `<span>${t("当年暂无收益变动记录")}</span><span class="text-slate-500 font-medium">${t("统计不完整")}</span>`;
+        }
+        return;
+      }
+
+      const totalIncome = incomeLogs.reduce((s, l) => s + l.diff, 0);
+      const ratio = finInvestable > 0 ? ((totalIncome / finInvestable) * 100).toFixed(1) : "0.0";
+      const sign = totalIncome > 0 ? "+" : (totalIncome < 0 ? "-" : "");
+      const absIncome = Math.abs(totalIncome);
+
+      incomeEl.textContent = `${sign}${fmtMoney(absIncome)}`;
+
+      yieldEl.title = t("当年已记录投资收益额 ({0}) ÷ 当前金融资产总额 ({1})", [fmtMoney(totalIncome), fmtMoney(finInvestable)]);
+
+      if (totalIncome > 0) {
+        incomeEl.className = "text-2xl sm:text-3xl font-semibold tracking-tight text-emerald-700";
+        yieldEl.textContent = t("占金融资产 +{0}%", [ratio]);
+        yieldEl.className = "text-xs px-2 py-0.5 rounded-md font-semibold border bg-emerald-50 text-emerald-800 border-emerald-200 shrink-0 cursor-help";
+      } else if (totalIncome < 0) {
+        incomeEl.className = "text-2xl sm:text-3xl font-semibold tracking-tight text-rose-700";
+        yieldEl.textContent = t("占金融资产 {0}%", [ratio]);
+        yieldEl.className = "text-xs px-2 py-0.5 rounded-md font-semibold border bg-rose-50 text-rose-800 border-rose-200 shrink-0 cursor-help";
+      } else {
+        incomeEl.className = "text-2xl sm:text-3xl font-semibold tracking-tight text-slate-700";
+        yieldEl.textContent = t("占金融资产 0.0%");
+        yieldEl.className = "text-xs px-2 py-0.5 rounded-md font-semibold border bg-slate-50 text-slate-700 border-slate-200 shrink-0 cursor-help";
+      }
+
+      if (subtextEl) {
+        subtextEl.innerHTML = `<span>${t("已记录 {0} 笔收益明细", [incomeLogs.length])}</span><span class="text-slate-500 font-medium">${t("不含本金流动")}</span>`;
+      }
+    }
+
+    // 使用当前成员姓名更新归属选项
+    function updateOwnerSelects() {
+      const p1Name = state.members?.p1?.name || t("本人");
+      const p2Name = state.members?.p2?.name || t("配偶");
+      ['newAssetOwner', 'editAssetOwner'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const curVal = el.value || 'p1';
+        el.innerHTML = `
+          <option value="p1">${t("本人 ({0})", [escapeHtml(p1Name)])}</option>
+          <option value="p2">${t("配偶 ({0})", [escapeHtml(p2Name)])}</option>
+          <option value="share">${t("家庭共有")}</option>
+        `;
+        el.value = curVal;
+      });
+    }
+
+    // 核心指标计算与全链路联动刷新
+    function refreshAllViews() {
+      updateHomeState();
+      updateCurrencyLabels();
+      // 1. 根据当前视角过滤资产
+      const currentAssets = state.assets.filter(a => {
+        if (state.selectedMember === 'all') return true;
+        return a.owner === state.selectedMember;
+      });
+
+      const p1Name = state.members?.p1?.name || t("本人");
+      const p2Name = state.members?.p2?.name || t("配偶");
+      const memberTitles = {
+        all: { title: t("家庭净资产"), list: t("家庭资产持仓清单"), sub: t("全家汇总口径 · 包含个人与共有资产"), log: t("全家近期变动") },
+        p1: { title: t("本人净资产 ({0})", [p1Name]), list: t("本人资产持仓清单 ({0})", [p1Name]), sub: t("{0}独有名下资产 · 共有资产请见共有视角", [p1Name]), log: t("{0}近期变动", [p1Name]) },
+        p2: { title: t("配偶净资产 ({0})", [p2Name]), list: t("配偶资产持仓清单 ({0})", [p2Name]), sub: t("{0}独有名下资产 · 共有资产请见共有视角", [p2Name]), log: t("{0}近期变动", [p2Name]) },
+        share: { title: t("共有净资产 (家庭共有)"), list: t("家庭共有资产清单"), sub: t("家庭共有自住房产与公共资产 · 房贷由共有承担"), log: t("共有资产变动") }
+      };
+      const curConfig = memberTitles[state.selectedMember] || memberTitles.all;
+
+      // 同步标题与提示
+      document.getElementById('card-networth-title').textContent = curConfig.title;
+      document.getElementById('header-subtitle').textContent = curConfig.sub;
+      document.getElementById('holdings-panel-title').textContent = curConfig.list;
+      document.getElementById('activity-panel-title').textContent = curConfig.log;
+
+      // 同步视角切换按钮文本与悬浮提示
+      const btnP1 = document.getElementById('m-p1');
+      if (btnP1) {
+        btnP1.textContent = p1Name ? t("本人 ({0})", [p1Name]) : t("本人");
+        btnP1.title = t("本人 ({0})", [p1Name]);
+      }
+      const btnP2 = document.getElementById('m-p2');
+      if (btnP2) {
+        btnP2.textContent = p2Name ? t("配偶 ({0})", [p2Name]) : t("配偶");
+        btnP2.title = t("配偶 ({0})", [p2Name]);
+      }
+
+      // 同步弹窗中的归属人下拉选项
+      updateOwnerSelects();
+
+      for (const [key, label] of [['cash','cash'], ['fixed','fixed'], ['fund','equity'], ['gold','gold']]) {
+        document.getElementById(`target-${label}-text`).textContent = `${state.targets[key].min}%~${state.targets[key].max}%`;
+      }
+
+      // 汇算总资产与负债
+      const totalAssets = currentAssets.filter(a => !a.isLiability).reduce((s, a) => s + a.amount, 0);
+      const totalDebt = currentAssets.filter(a => a.isLiability).reduce((s, a) => s + a.amount, 0);
+      const netWorth = totalAssets - totalDebt;
+      const debtRatio = totalAssets > 0 ? ((totalDebt / totalAssets) * 100).toFixed(1) : "0.0";
+
+      const aCount = currentAssets.filter(a => !a.isLiability).length;
+      const dCount = currentAssets.filter(a => a.isLiability).length;
+
+      // 赋值顶部卡片
+      document.getElementById('stat-net-worth').textContent = fmtMoney(netWorth);
+      document.getElementById('stat-total-assets').textContent = fmtMoney(totalAssets);
+      document.getElementById('stat-liabilities').textContent = fmtMoney(totalDebt);
+      document.getElementById('stat-asset-count').textContent = t("{0} 项资产 · {1} 笔负债", [aCount, dCount]);
+
+      // 独立计算今年以来增长与投资收益卡片
+      updateYtdGrowthCard();
+      updateIncomeCard(currentAssets);
+
+      // 较上次记录波动率动态计算
+      const memHistory = state.history[state.selectedMember] || [];
+      document.getElementById('stat-monthly-diff').textContent = t("暂无可比记录");
+      if (memHistory.length >= 2) {
+        const last = memHistory[memHistory.length - 1];
+        const prev = memHistory[memHistory.length - 2];
+        const mDiff = last.netWorth - prev.netWorth;
+        const mPct = prev.netWorth > 0 ? ((mDiff / prev.netWorth) * 100).toFixed(2) : "0.00";
+        const mDiffEl = document.getElementById('stat-monthly-diff');
+        if (mDiffEl) {
+          mDiffEl.textContent = t("{0}{1}% 较上次记录", [mDiff >= 0 ? '+' : '', mPct]);
+        }
+      }
+
+      // 负债徽章与副标题
+      const debtBadge = document.getElementById('stat-debt-badge');
+      const debtSubtext = document.getElementById('stat-debt-subtext');
+      if (totalDebt === 0) {
+        debtBadge.className = "text-xs px-2 py-0.5 rounded-md font-bold bg-slate-100 text-slate-500";
+        debtBadge.textContent = t("无负债");
+        debtSubtext.innerHTML = `<span>${t("当前无任何负债")}</span><span class="text-slate-400">${t("稳健无杠杆")}</span>`;
+      } else {
+        debtBadge.className = "text-xs px-2 py-0.5 rounded-md font-bold bg-emerald-50 text-emerald-700 border border-emerald-200";
+        debtBadge.textContent = t("负债率 {0}%", [debtRatio]);
+        const mortgage = currentAssets.find(a => a.category === 'debt' && /按揭|mortgage/i.test(a.name));
+        const cardDebt = currentAssets.find(a => a.category === 'debt' && /信用卡|credit card/i.test(a.name));
+        debtSubtext.innerHTML = `
+          <span>${mortgage ? t("房贷本金 ") + fmtMoney(mortgage.amount) : t("消费借贷")}</span>
+          <span class="text-slate-500">${cardDebt ? t("信用卡 ") + fmtMoney(cardDebt.amount) : ''}</span>
+        `;
+      }
+
+      // 资产副文本
+      const realEstate = currentAssets.find(a => a.category === 'real');
+      const finAssetsAmt = currentAssets.filter(a => !a.isLiability && a.category !== 'real').reduce((s, a) => s + a.amount, 0);
+      document.getElementById('stat-assets-subtext').innerHTML = `
+        <span>${t("金融资产 {0}", [fmtMoney(finAssetsAmt)])}</span>
+        <span class="text-slate-500">${realEstate ? t("房产 ") + fmtMoney(realEstate.amount) : t("无固定资产")}</span>
+      `;
+
+      // 四大金融配置大类计算
+      const cashAmt = currentAssets.filter(a => a.category === 'cash').reduce((s, a) => s + a.amount, 0);
+      const fixedAmt = currentAssets.filter(a => a.category === 'fixed').reduce((s, a) => s + a.amount, 0);
+      const equityAmt = currentAssets.filter(a => a.category === 'fund').reduce((s, a) => s + a.amount, 0);
+      const goldAmt = currentAssets.filter(a => a.category === 'gold').reduce((s, a) => s + a.amount, 0);
+      const investableTotal = cashAmt + fixedAmt + equityAmt + goldAmt;
+
+      const getPct = (v) => investableTotal > 0 ? ((v / investableTotal) * 100).toFixed(1) : "0.0";
+      const pCash = getPct(cashAmt);
+      const pFixed = getPct(fixedAmt);
+      const pEquity = getPct(equityAmt);
+      const pGold = getPct(goldAmt);
+
+      // 填充明细条
+      document.getElementById('pct-cash-amt').textContent = fmtMoney(cashAmt);
+      document.getElementById('pct-cash-val').textContent = pCash + "%";
+      document.getElementById('bar-cash').style.width = Math.min(parseFloat(pCash), 100) + '%';
+      renderDiffHint('diff-cash-text', parseFloat(pCash), state.targets.cash.min, state.targets.cash.max);
+
+      document.getElementById('pct-fixed-amt').textContent = fmtMoney(fixedAmt);
+      document.getElementById('pct-fixed-val').textContent = pFixed + "%";
+      document.getElementById('bar-fixed').style.width = Math.min(parseFloat(pFixed), 100) + '%';
+      renderDiffHint('diff-fixed-text', parseFloat(pFixed), state.targets.fixed.min, state.targets.fixed.max);
+
+      document.getElementById('pct-equity-amt').textContent = fmtMoney(equityAmt);
+      document.getElementById('pct-equity-val').textContent = pEquity + "%";
+      document.getElementById('bar-equity').style.width = Math.min(parseFloat(pEquity), 100) + '%';
+      renderDiffHint('diff-equity-text', parseFloat(pEquity), state.targets.fund.min, state.targets.fund.max);
+
+      document.getElementById('pct-gold-amt').textContent = fmtMoney(goldAmt);
+      document.getElementById('pct-gold-val').textContent = pGold + "%";
+      document.getElementById('bar-gold').style.width = Math.min(parseFloat(pGold), 100) + '%';
+      renderDiffHint('diff-gold-text', parseFloat(pGold), state.targets.gold.min, state.targets.gold.max);
+
+
+      // 渲染饼图与切片
+      renderAllocationPie(cashAmt, fixedAmt, equityAmt, goldAmt, investableTotal, [pCash, pFixed, pEquity, pGold]);
+
+      // 渲染走势图
+      drawTrendChart();
+
+      // 渲染持仓清单表格
+      renderAssetTable(currentAssets);
+
+      // 渲染变动记录
+      renderActivityLogs();
+
+      // 同步备份时间
+      const backupLabel = state.lastBackupTime ? (Number.isNaN(Date.parse(state.lastBackupTime)) ? state.lastBackupTime : new Date(state.lastBackupTime).toLocaleString(numberLocale(), {hour12:false})) : '';
+      document.getElementById('data-modal-last-backup').textContent = backupLabel || t("从未备份");
+      document.getElementById('data-modal-asset-count').textContent = t("{0} 项", [state.assets.length]);
+      document.getElementById('storage-status').textContent = state.storageReadError ? t("读取失败 · 原数据已保留") : isEmptyLedger() ? t("空账本") : t("已保存至当前浏览器");
+    }
+
+    // 偏差值动态提示生成器 (精确到数值偏差与“个百分点”)
+    function renderDiffHint(elemId, actual, min, max) {
+      const el = document.getElementById(elemId);
+      if (actual >= min && actual <= max) {
+        el.className = "text-emerald-700 font-medium";
+        el.textContent = t("处于合理区间");
+      } else if (actual < min) {
+        el.className = "text-indigo-600 font-bold";
+        el.textContent = t("低于目标下限 {0} 个百分点", [(min - actual).toFixed(1)]);
+      } else {
+        el.className = "text-amber-700 font-bold";
+        el.textContent = t("高于目标上限 {0} 个百分点", [(actual - max).toFixed(1)]);
+      }
+    }
+
+    // 绘制带直观占比的 SVG 饼图
+    function renderAllocationPie(cash, fixed, equity, gold, total, pcts) {
+      const svg = document.getElementById('allocDonutSvg');
+      svg.innerHTML = '';
+      document.getElementById('center-donut-val').textContent = state.isPrivacy ? "••••" : currencySymbol() + compactAmount(total);
+      if (total <= 0) return;
+
+      const slices = [
+        { key: 'cash', label: t("活钱"), color: "#06b6d4", amt: cash, pct: pcts[0] },
+        { key: 'fixed', label: t("稳健"), color: "#10b981", amt: fixed, pct: pcts[1] },
+        { key: 'equity', label: t("权益"), color: "#4f46e5", amt: equity, pct: pcts[2] },
+        { key: 'gold', label: t("黄金"), color: "#f59e0b", amt: gold, pct: pcts[3] }
+      ];
+
+      const radius = 38;
+      const circumference = 2 * Math.PI * radius;
+      let offset = 0;
+
+      slices.forEach(s => {
+        const p = s.amt / total;
+        if (p <= 0) return;
+
+        const dashArray = `${p * circumference} ${circumference}`;
+        const dashOffset = -offset * circumference;
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", "50");
+        circle.setAttribute("cy", "50");
+        circle.setAttribute("r", radius);
+        circle.setAttribute("fill", "transparent");
+        circle.setAttribute("stroke", s.color);
+        circle.setAttribute("data-category", s.key);
+        circle.setAttribute("stroke-width", "13");
+        circle.setAttribute("stroke-dasharray", dashArray);
+        circle.setAttribute("stroke-dashoffset", dashOffset);
+        circle.setAttribute("class", "donut-slice cursor-pointer");
+        circle.innerHTML = `<title>${s.label}: ${s.pct}% (${fmtMoney(s.amt)})</title>`;
+        svg.appendChild(circle);
+
+        offset += p;
+      });
+
+    }
+
+    // 走势图 Canvas 绘制 (真实日历时间跨度 + 多序列自适应防越界 + 零轴支持)
+    let chartCoordinates = [];
+
+    function drawTrendChart() {
+      const canvas = document.getElementById('trendCanvas');
+      const emptyState = document.getElementById('trendEmptyState');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const theme = window.getComputedStyle(document.documentElement);
+      const chartColor = name => theme.getPropertyValue(`--chart-${name}`).trim();
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const width = rect.width;
+      const height = rect.height;
+      ctx.clearRect(0, 0, width, height);
+
+      // 获取当前成员的历史序列
+      const memberHistory = (state.history && state.history[state.selectedMember]) || [];
+      if (!memberHistory || memberHistory.length < 2) {
+        emptyState.classList.remove('hidden');
+        document.getElementById('chart-start-val').textContent = t("暂无数据");
+        document.getElementById('chart-end-val').textContent = t("暂无数据");
+        document.getElementById('chart-gain-val').textContent = t("暂无历史波动");
+        document.getElementById('trend-time-range-text').textContent = t("时间区间: 暂无足够历史数据");
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      // 按日历日期过滤图表记录
+      const now = new Date();
+      const curYearStartStr = `${now.getFullYear()}-01-01`;
+      const oneYearAgoDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+      const threeYearsAgoDate = new Date(now.getFullYear() - 3, now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+
+      let data = [];
+      let horizonCoverageLabel = "";
+
+      if (state.horizon === 'ytd') {
+        const baseInfo = getYtdBaseline(memberHistory, now.getFullYear());
+        if (baseInfo.status !== 'missing' && baseInfo.startDate) {
+          data = memberHistory.filter(d => d.date >= baseInfo.startDate);
+          if (baseInfo.isTrueYearStart) {
+            horizonCoverageLabel = t("今年以来");
+          } else {
+            horizonCoverageLabel = t("年初基准缺失");
+          }
+        } else {
+          data = memberHistory.slice();
+          horizonCoverageLabel = t("年初基准缺失 (历史记录不足)");
+        }
+      } else if (state.horizon === '1y') {
+        data = memberHistory.filter(d => d.date >= oneYearAgoDate);
+        horizonCoverageLabel = t("近1年");
+      } else if (state.horizon === '3y') {
+        data = memberHistory.filter(d => d.date >= threeYearsAgoDate);
+        horizonCoverageLabel = t("近3年");
+      } else {
+        data = memberHistory.slice();
+        horizonCoverageLabel = t("全部历史记录");
+      }
+
+      // 当历史数据不足周期跨度时，展示实际覆盖范围
+      if (data.length < 2) {
+        data = memberHistory.slice();
+        horizonCoverageLabel = t("数据积累中");
+      }
+
+      // 动态同步最新资产值到图表末尾，保证图表终值与持仓汇总严格一致
+      const curAssets = state.assets.filter(a => state.selectedMember === 'all' || a.owner === state.selectedMember);
+      const currentNet = curAssets.filter(a => !a.isLiability).reduce((s, a) => s + a.amount, 0) - curAssets.filter(a => a.isLiability).reduce((s, a) => s + a.amount, 0);
+      const currentTotal = curAssets.filter(a => !a.isLiability).reduce((s, a) => s + a.amount, 0);
+      const currentDebt = curAssets.filter(a => a.isLiability).reduce((s, a) => s + a.amount, 0);
+
+      data = JSON.parse(JSON.stringify(data));
+      if (data.length > 0) {
+        data[data.length - 1].netWorth = currentNet;
+        data[data.length - 1].totalAssets = currentTotal;
+        data[data.length - 1].liabilities = currentDebt;
+      }
+
+      // 区间起点、终点与增量纯净计算 (与顶部卡片基准完全对齐)
+      const startNet = data[0].netWorth;
+      const endNet = data[data.length - 1].netWorth;
+      const diffNet = endNet - startNet;
+      const pctNet = startNet > 0 ? ((diffNet / startNet) * 100).toFixed(1) : "0.0";
+
+      document.getElementById('chart-start-val').textContent = fmtMoney(startNet);
+      document.getElementById('chart-end-val').textContent = fmtMoney(endNet);
+      document.getElementById('chart-gain-val').textContent = state.isPrivacy 
+        ? t("区间增值: ••••••")
+        : t("区间增值: {0}{1} ({2}{3}%)", [diffNet >= 0 ? '+' : '', fmtMoney(diffNet), diffNet >= 0 ? '+' : '', pctNet]);
+      document.getElementById('trend-time-range-text').textContent = t("统计区间: {0} ~ {1} · {2}", [data[0].date || data[0].month, data[data.length - 1].date || data[data.length - 1].month, horizonCoverageLabel]);
+
+      // 布局边距
+      const padL = 48, padR = 20, padT = 20, padB = 26;
+      const chartW = width - padL - padR;
+      const chartH = height - padT - padB;
+
+      // 汇集当前激活序列极值，自适应全序列与负净资产
+      let allActiveValues = data.map(d => d.netWorth);
+      if (state.showAssetsSeries) allActiveValues = allActiveValues.concat(data.map(d => d.totalAssets));
+      if (state.showDebtSeries) allActiveValues = allActiveValues.concat(data.map(d => d.liabilities));
+
+      let maxVal = Math.max(...allActiveValues);
+      let minVal = Math.min(...allActiveValues);
+      if (minVal === maxVal) {
+        maxVal = maxVal + 10000;
+        minVal = Math.max(0, minVal - 10000);
+      }
+      const valSpan = maxVal - minVal;
+      maxVal = maxVal + valSpan * 0.08;
+      minVal = minVal > 0 ? Math.max(0, minVal - valSpan * 0.08) : minVal - Math.abs(valSpan) * 0.08;
+
+      // 真实时间比例计算 X 坐标
+      const startTime = new Date(data[0].date).getTime();
+      const endTime = new Date(data[data.length - 1].date).getTime();
+      const timeSpan = endTime - startTime || 1;
+
+      const getX = (item) => {
+        const curTime = new Date(item.date).getTime();
+        return padL + ((curTime - startTime) / timeSpan) * chartW;
+      };
+      const getY = (v) => padT + chartH - ((v - minVal) / (maxVal - minVal || 1)) * chartH;
+
+      chartCoordinates = data.map(d => ({
+        x: getX(d),
+        yNet: getY(d.netWorth),
+        yTotal: getY(d.totalAssets),
+        yDebt: getY(d.liabilities),
+        item: d
+      }));
+
+      // 水平网格线与 Y 轴刻度
+      ctx.strokeStyle = chartColor('grid');
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
+      ctx.fillStyle = chartColor('label');
+      ctx.font = "11px -apple-system, sans-serif";
+      ctx.textAlign = "right";
+
+      for (let i = 0; i <= 4; i++) {
+        const v = minVal + (i / 4) * (maxVal - minVal);
+        const y = getY(v);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(width - padR, y);
+        ctx.stroke();
+
+        let labelText = "••••";
+        if (!state.isPrivacy) {
+          const absV = Math.abs(v);
+          const sign = v < 0 ? "-" : "";
+          labelText = compactAmount(v);
+        }
+        ctx.fillText(labelText, padL - 6, y + 3.5);
+      }
+      ctx.setLineDash([]);
+
+      // 零轴支持 (当存在负值时高亮零轴)
+      if (minVal < 0 && maxVal > 0) {
+        const zeroY = getY(0);
+        ctx.strokeStyle = chartColor('zero');
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(padL, zeroY);
+        ctx.lineTo(width - padR, zeroY);
+        ctx.stroke();
+      }
+
+      // 曲线平滑绘制辅助
+      function drawSmooth(key, color, isNetWorth = false) {
+        ctx.beginPath();
+        data.forEach((d, i) => {
+          const x = getX(d);
+          const y = getY(d[key]);
+          if (i === 0) ctx.moveTo(x, y);
+          else {
+            const prevX = getX(data[i - 1]);
+            const prevY = getY(data[i - 1][key]);
+            const cpX = (prevX + x) / 2;
+            ctx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
+          }
+        });
+
+        if (isNetWorth) {
+          // 低对比度区域填充
+          ctx.lineTo(getX(data[data.length - 1]), padT + chartH);
+          ctx.lineTo(getX(data[0]), padT + chartH);
+          ctx.closePath();
+          ctx.fillStyle = chartColor('fill');
+          ctx.fill();
+
+          // 主折线
+          ctx.beginPath();
+          data.forEach((d, i) => {
+            const x = getX(d);
+            const y = getY(d[key]);
+            if (i === 0) ctx.moveTo(x, y);
+            else {
+              const prevX = getX(data[i - 1]);
+              const prevY = getY(data[i - 1][key]);
+              const cpX = (prevX + x) / 2;
+              ctx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
+            }
+          });
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.8;
+          ctx.lineCap = "round";
+          ctx.stroke();
+        }
+      }
+
+      if (state.showAssetsSeries) drawSmooth('totalAssets', '#60a5fa');
+      if (state.showDebtSeries) drawSmooth('liabilities', '#f59e0b');
+      drawSmooth('netWorth', chartColor('net'), true);
+
+      // 数据点与 X 轴刻度 (动态防重叠算法，保证首尾点与整齐间隔)
+      const minSpacing = 58;
+      const maxLabels = Math.max(2, Math.floor(chartW / minSpacing));
+      const step = Math.ceil(data.length / maxLabels);
+
+      ctx.textAlign = "center";
+      let lastDrawnLabelX = -999;
+
+      data.forEach((d, i) => {
+        const x = getX(d);
+        const y = getY(d.netWorth);
+
+        // 圆点
+        ctx.beginPath();
+        ctx.arc(x, y, 2.8, 0, Math.PI * 2);
+        ctx.fillStyle = chartColor('point');
+        ctx.fill();
+        ctx.strokeStyle = chartColor('net');
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        // 标签防重叠
+        const isFirst = (i === 0);
+        const isLast = (i === data.length - 1);
+        const isStep = (i % step === 0);
+
+        if (isFirst || isLast || isStep) {
+          if ((x - lastDrawnLabelX >= 44) && (padL + chartW - x >= 36 || isLast)) {
+            ctx.fillStyle = chartColor('label');
+            ctx.fillText(d.month, x, padT + chartH + 17);
+            lastDrawnLabelX = x;
+          }
+        }
+      });
+    }
+
+    // 走势图交互 (鼠标、触屏与键盘左右方向键全面支持)
+    let keyboardPointIndex = -1;
+
+    function showTooltipForCoord(pt) {
+      const tooltip = document.getElementById('chartTooltip');
+      const canvas = document.getElementById('trendCanvas');
+      if (!tooltip || !canvas || !pt) return;
+
+      const rect = canvas.getBoundingClientRect();
+      document.getElementById('tip-date').textContent = pt.item.date || pt.item.month;
+      document.getElementById('tip-networth').textContent = fmtMoney(pt.item.netWorth);
+      document.getElementById('tip-total').textContent = fmtMoney(pt.item.totalAssets);
+      document.getElementById('tip-debt').textContent = fmtMoney(pt.item.liabilities);
+
+      tooltip.classList.remove('hidden');
+
+      const tipW = tooltip.offsetWidth || 180;
+      const tipH = tooltip.offsetHeight || 110;
+      const containerW = rect.width;
+      const containerH = rect.height;
+
+      // 1. X 轴左右防裁切
+      let tipX = pt.x + 14;
+      if (tipX + tipW > containerW - 8) {
+        tipX = pt.x - tipW - 14;
+      }
+      tipX = Math.max(8, Math.min(containerW - tipW - 8, tipX));
+
+      // 2. Y 轴上下防裁切：处于下半区或低位数据点时，提示框置于点位上方！
+      let tipY = pt.yNet - 20;
+      if (pt.yNet > containerH * 0.52 || tipY + tipH > containerH - 8) {
+        tipY = pt.yNet - tipH - 12;
+      }
+      if (tipY < 8) {
+        tipY = pt.yNet + 14;
+      }
+      tipY = Math.max(8, Math.min(containerH - tipH - 8, tipY));
+
+      tooltip.style.left = tipX + 'px';
+      tooltip.style.top = tipY + 'px';
+    }
+
+    function initChartInteractions() {
+      const canvas = document.getElementById('trendCanvas');
+      const container = document.getElementById('trendContainer');
+      const tooltip = document.getElementById('chartTooltip');
+      if (!canvas || !tooltip || !container) return;
+
+      const handlePointerMove = (clientX, clientY) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = clientX - rect.left;
+
+        let closest = null;
+        let minDist = Infinity;
+        chartCoordinates.forEach((pt, idx) => {
+          const dist = Math.abs(pt.x - mouseX);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = pt;
+            keyboardPointIndex = idx;
+          }
+        });
+
+        if (closest && minDist < 38) {
+          showTooltipForCoord(closest);
+        } else {
+          tooltip.classList.add('hidden');
+        }
+      };
+
+      canvas.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+      canvas.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+
+      // 触屏滑动支持
+      canvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+      canvas.addEventListener('touchend', () => tooltip.classList.add('hidden'));
+
+      // 键盘左右键导览支持
+      container.addEventListener('keydown', (e) => {
+        if (!chartCoordinates || chartCoordinates.length === 0) return;
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (keyboardPointIndex <= 0) keyboardPointIndex = chartCoordinates.length - 1;
+          else keyboardPointIndex--;
+          showTooltipForCoord(chartCoordinates[keyboardPointIndex]);
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          if (keyboardPointIndex === -1 || keyboardPointIndex >= chartCoordinates.length - 1) keyboardPointIndex = 0;
+          else keyboardPointIndex++;
+          showTooltipForCoord(chartCoordinates[keyboardPointIndex]);
+        }
+      });
+    }
+
+    // 渲染持仓清单表格
+    function renderAssetTable(assets) {
+      const tbody = document.getElementById('assetTableBody');
+      const emptyRow = document.getElementById('assetEmptyRow');
+      if (!tbody || !emptyRow) return;
+      tbody.innerHTML = '';
+
+      const filtered = assets.filter(a => {
+        if (state.selectedCategory !== 'all' && a.category !== state.selectedCategory) return false;
+        if (state.searchQuery) {
+          const q = state.searchQuery.toLowerCase();
+          return a.name.toLowerCase().includes(q) || a.institution.toLowerCase().includes(q) || (a.note && a.note.toLowerCase().includes(q));
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        emptyRow.classList.remove('hidden');
+        const hasFilters = state.selectedCategory !== 'all' || !!state.searchQuery;
+        document.getElementById('asset-empty-message').textContent = hasFilters
+          ? t("没有符合筛选条件的资产，请调整分类或搜索关键词。")
+          : t("暂无匹配的资产标的，可点击右上角「+ 新增资产」添加");
+        document.getElementById('clear-asset-filters').classList.toggle('hidden', !hasFilters);
+      } else {
+        emptyRow.classList.add('hidden');
+      }
+
+      const catBadges = {
+        cash: { label: t("活钱"), bg: "bg-cyan-50 text-cyan-800 border-cyan-200" },
+        fixed: { label: t("稳健"), bg: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+        fund: { label: t("权益"), bg: "bg-indigo-50 text-indigo-800 border-indigo-200" },
+        gold: { label: t("黄金"), bg: "bg-amber-50 text-amber-900 border-amber-200" },
+        real: { label: t("房产"), bg: "bg-slate-100 text-slate-800 border-slate-200" },
+        debt: { label: t("负债"), bg: "bg-rose-50 text-rose-800 border-rose-200" }
+      };
+      const p1Name = state.members?.p1?.name || t("本人");
+      const p2Name = state.members?.p2?.name || t("配偶");
+      const ownerNames = {
+        p1: t("本人 ({0})", [p1Name]),
+        p2: t("配偶 ({0})", [p2Name]),
+        share: t("共有")
+      };
+
+      let subtotalAssets = 0;
+      let subtotalDebt = 0;
+
+      filtered.forEach(item => {
+        if (item.isLiability) {
+          subtotalDebt += item.amount;
+        } else {
+          subtotalAssets += item.amount;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+
+        const badge = catBadges[item.category] || { label: item.category, bg: "bg-slate-100 text-slate-700" };
+        
+        let diffHtml = `<span class="text-slate-400 tabular-nums text-xs">${t("持平")}</span>`;
+        if (item.lastDiff > 0) {
+          diffHtml = `<span class="${item.isLiability ? 'text-amber-700' : 'text-emerald-700'} font-bold tabular-nums text-xs">+${fmtMoney(item.lastDiff)}</span>`;
+        } else if (item.lastDiff < 0) {
+          diffHtml = `<span class="${item.isLiability ? 'text-emerald-700' : 'text-rose-700'} font-bold tabular-nums text-xs">${fmtMoney(item.lastDiff)}</span>`;
+        }
+
+        // 统一日期格式为 YYYY-MM-DD
+        let formattedDate = item.updatedAt || new Date().toISOString().slice(0, 10);
+        if (formattedDate.length === 5) formattedDate = '2026-' + formattedDate;
+
+        tr.innerHTML = `
+          <td class="px-4 py-3">
+            <div class="font-bold text-slate-900 text-sm truncate" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+            <div class="text-xs text-slate-500 mt-0.5 truncate" title="${escapeHtml([institutionLabel(item.institution), item.note].filter(Boolean).join(' · '))}">${escapeHtml([institutionLabel(item.institution), item.note].filter(Boolean).join(' · ') || t("无备注"))}</div>
+          </td>
+          <td class="px-3 py-3">
+            <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-xs font-semibold border ${badge.bg}">
+              ${escapeHtml(badge.label)}
+            </span>
+          </td>
+          <td class="px-3 py-3 text-slate-700 text-xs font-medium">
+            <div class="whitespace-nowrap">${item.owner === 'p1' ? t("本人") : item.owner === 'p2' ? t("配偶") : t("共有")}</div>
+            ${item.owner !== 'share' ? `<div class="text-[11px] text-slate-500 max-w-[100px] truncate" title="${escapeHtml(state.members[item.owner]?.name || '')}">${escapeHtml(state.members[item.owner]?.name || '')}</div>` : ''}
+          </td>
+          <td class="px-3 py-3 text-right font-semibold ${item.isLiability ? 'text-amber-800' : 'text-slate-900'} text-sm tabular-nums">
+            <span class="mobile-cell-label">${t("当前金额")}</span>
+            ${item.isLiability ? '-' : ''}${fmtMoney(item.amount)}
+          </td>
+          <td class="px-3 py-3 text-right">
+            <span class="mobile-cell-label">${t("较上次更新")}</span>
+            <div>${diffHtml}</div>
+            <div class="text-[11px] text-slate-400 tabular-nums mt-0.5" title="${t("较上次记录")}">${escapeHtml(formattedDate)}</div>
+          </td>
+          <td class="px-2 py-3">
+            <div class="flex items-center justify-end gap-1">
+            <button ${state.isDemo ? 'disabled' : ''} onclick="openValuationModal(${item.id})" class="table-action px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition shadow-2xs min-h-[30px]" aria-label="${t("更新{0}金额", [escapeHtml(item.name)])}">
+              ${t("更新金额")}
+            </button>
+            <button ${state.isDemo ? 'disabled' : ''} onclick="openEditAssetModal(${item.id})" class="table-action rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition" title="${t("编辑信息")}" aria-label="${t("编辑{0}", [escapeHtml(item.name)])}">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+              <span class="mobile-action-label">${t("编辑")}</span>
+            </button>
+            <button ${state.isDemo ? 'disabled' : ''} onclick="deleteAsset(${item.id})" class="table-action rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="${t("删除资产")}" aria-label="${t("删除{0}", [escapeHtml(item.name)])}">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              <span class="mobile-action-label">${t("删除")}</span>
+            </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 明确分项小计
+      document.getElementById('subtotal-assets').textContent = fmtMoney(subtotalAssets);
+      document.getElementById('subtotal-debt').textContent = fmtMoney(subtotalDebt);
+      document.getElementById('subtotal-net').textContent = fmtMoney(subtotalAssets - subtotalDebt);
+      document.getElementById('holdings-count-tag').textContent = t("(共 {0} 项标的)", [filtered.length]);
+    }
+
+    // 变动记录已展开备注集合
+    state.revealedLogIds = state.revealedLogIds || new Set();
+
+    function revealLogDesc(logId) {
+      state.revealedLogIds.add(logId);
+      renderActivityLogs();
+    }
+
+    // Display each recorded account change without inferring payment flows or net-worth impact.
+    function renderActivityLogs() {
+      const container = document.getElementById('recentChangesList');
+      const empty = document.getElementById('activityEmptyState');
+      if (!container || !empty) return;
+      container.innerHTML = '';
+      const filtered = state.logs.filter(log => state.selectedMember === 'all' || log.owner === state.selectedMember);
+      empty.classList.toggle('hidden', filtered.length !== 0);
+      filtered.slice(0, 6).forEach(log => {
+        const item = document.createElement('div');
+        item.className = "activity-entry flex items-start justify-between text-xs";
+        const amount = state.isPrivacy ? fmtMoney(log.diff)
+          : log.diff === 0 ? t("持平") : `${log.diff > 0 ? '+' : ''}${fmtMoney(log.diff)}`;
+        const description = state.isPrivacy && !state.revealedLogIds.has(log.id)
+          ? `<div class="flex items-center space-x-1.5 mt-1"><span class="text-slate-400 text-xs italic">${t("说明文字已隐私遮蔽")}</span><button onclick="revealLogDesc(${log.id})" class="text-[11px] text-indigo-600 hover:underline font-medium">${t("查看说明")}</button></div>`
+          : log.desc ? `<div class="text-slate-500 text-xs mt-1 leading-relaxed">${escapeHtml(logDescription(log))}</div>` : '';
+        item.innerHTML = `
+          <div class="pr-2 min-w-0">
+            <div class="flex flex-wrap items-center gap-1.5 font-bold text-slate-800 text-xs">
+              <span class="activity-kind text-slate-500 text-xs font-medium">${escapeHtml(t(log.type || "余额更新"))}</span>
+              <span>${escapeHtml(log.assetName)}</span>
+            </div>
+            ${description}
+            <div class="text-[11px] text-slate-400 mt-0.5 tabular-nums">${escapeHtml(log.date)}</div>
+          </div>
+          <div class="text-right whitespace-nowrap pl-2 flex flex-col items-end">
+            <div class="text-slate-800 font-bold tabular-nums text-xs">${amount}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">${t("余额变动")}</div>
+          </div>`;
+        container.appendChild(item);
+      });
+    }
+
+    // 成员视角切换 (顶部卡片与图表全面联动)
+    function setMember(m) {
+      state.selectedMember = m;
+      ['all', 'p1', 'p2', 'share'].forEach(k => {
+        const btn = document.getElementById(`m-${k}`);
+        if (btn) {
+          btn.setAttribute('aria-pressed', String(k === m));
+          if (k === m) {
+            btn.className = "px-2.5 py-1 rounded-lg bg-white text-slate-900 font-bold shadow-2xs transition";
+          } else {
+            btn.className = "px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition";
+          }
+        }
+      });
+      refreshAllViews();
+    }
+
+    // 分类筛选
+    function filterCat(c) {
+      state.selectedCategory = c;
+      document.querySelectorAll('#catFilterGroup .cat-btn').forEach(b => {
+        const selected = b.dataset.category === c;
+        b.setAttribute('aria-pressed', String(selected));
+        b.className = selected
+          ? "cat-btn px-2 py-1 rounded-md bg-white text-slate-900 font-bold shadow-2xs"
+          : "cat-btn px-2 py-1 rounded-md text-slate-600 hover:text-slate-900";
+      });
+      const curAssets = state.assets.filter(a => state.selectedMember === 'all' || a.owner === state.selectedMember);
+      renderAssetTable(curAssets);
+    }
+
+    function clearAssetFilters() {
+      state.searchQuery = '';
+      document.getElementById('assetSearchInput').value = '';
+      filterCat('all');
+    }
+
+    // 搜索
+    function handleSearch() {
+      state.searchQuery = document.getElementById('assetSearchInput').value;
+      const curAssets = state.assets.filter(a => state.selectedMember === 'all' || a.owner === state.selectedMember);
+      renderAssetTable(curAssets);
+    }
+
+    // 金额显示切换与弹窗同步
+    function togglePrivacy() {
+      state.isPrivacy = !state.isPrivacy;
+      updatePrivacyButton();
+
+      // 若更新金额弹窗正处于打开状态，同步更新其隐私遮罩
+      if (state.editingAssetId) updateValuationModalPrivacyState();
+      refreshAllViews();
+    }
+
+    function updatePrivacyButton() {
+      const privacyText = document.getElementById('privacy-text');
+      if (privacyText) {
+        privacyText.textContent = state.isPrivacy ? t("显示金额") : t("隐藏金额");
+      }
+      const toggleBtn = document.getElementById('btn-privacy');
+      if (toggleBtn) {
+        toggleBtn.setAttribute('title', state.isPrivacy ? t("显示金额") : t("隐藏金额"));
+        toggleBtn.setAttribute('aria-label', state.isPrivacy ? t("显示金额") : t("隐藏金额"));
+        toggleBtn.setAttribute('aria-pressed', String(state.isPrivacy));
+      }
+
+    }
+
+    function setLanguage(nextLanguage) {
+      if (!['zh-CN', 'en'].includes(nextLanguage)) return;
+      language = nextLanguage;
+      if (state.isNewLedger && !state.isDemo) state.members = createEmptyLedger().members;
+      let persisted = true;
+      try { localStorage.setItem(LANGUAGE_KEY, language); } catch { persisted = false; }
+      translateStaticPage();
+      updatePrivacyButton();
+      refreshAllViews();
+      if (!persisted) alert(t('语言偏好无法保存，本次会话仍可使用所选语言。'));
+    }
+
+    // 走势图周期切换 (只影响走势图自身，不影响顶部指标)
+    function setChartHorizon(h) {
+      state.horizon = h;
+      ['ytd', '1y', '3y', 'all'].forEach(k => {
+        const b = document.getElementById(`btn-horizon-${k}`);
+        if (b) {
+          b.setAttribute('aria-pressed', String(k === h));
+          if (k === h) b.className = "px-2.5 py-1 rounded-md bg-white text-indigo-700 shadow-2xs font-bold transition";
+          else b.className = "px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition";
+        }
+      });
+      drawTrendChart();
+    }
+
+    // 在图例中切换可选的总资产与负债曲线。
+    function toggleSeries(type) {
+      if (type === 'assets') state.showAssetsSeries = document.getElementById('chk-show-assets').checked;
+      if (type === 'debt') state.showDebtSeries = document.getElementById('chk-show-debt').checked;
+      drawTrendChart();
+    }
+
+    // 每日资产快照持久化记录 (更新或新增时自动按自然日归档)
+    function recordDailySnapshot(data = state) {
+      const todayStr = localDate();
+      const monthStr = todayStr.slice(0, 7).replace('-', '.');
+
+      ['all', 'p1', 'p2', 'share'].forEach(m => {
+        const curAssets = data.assets.filter(a => m === 'all' || a.owner === m);
+        const totalAssets = curAssets.filter(a => !a.isLiability).reduce((s, a) => s + a.amount, 0);
+        const liabilities = curAssets.filter(a => a.isLiability).reduce((s, a) => s + a.amount, 0);
+        const netWorth = totalAssets - liabilities;
+
+        if (!data.history) data.history = {};
+        if (!data.history[m]) data.history[m] = [];
+        const list = data.history[m];
+        const existingIndex = list.findIndex(d => d.date === todayStr);
+        const snapshotItem = {
+          date: todayStr,
+          month: monthStr,
+          totalAssets: totalAssets,
+          liabilities: liabilities,
+          netWorth: netWorth
+        };
+
+        if (existingIndex >= 0) {
+          list[existingIndex] = snapshotItem;
+        } else {
+          list.push(snapshotItem);
+          list.sort((a, b) => a.date.localeCompare(b.date));
+        }
+      });
+    }
+
+    // ==================== 无障碍弹窗系统 (ARIA / Focus Trap / 键盘导航) ====================
+
+    function openModal(id) {
+      if (state.isDemo) return;
+      if (state.storageReadError && id !== 'dataModal') { alert(t("请先从有效备份恢复账本，原始数据尚未被覆盖。")); return; }
+      state.activeModalTriggerBtn = document.activeElement;
+      const modal = document.getElementById(id);
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      document.querySelectorAll('body > header, body > main').forEach(el => { el.inert = true; });
+
+      // 自动聚焦第一个可聚焦元素
+      setTimeout(() => {
+        const focusables = modal.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        const visibleFocusables = Array.from(focusables).filter(el => el.offsetParent !== null && !el.hidden && el.tabIndex !== -1);
+        const firstInput = visibleFocusables.find(el => ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName));
+        if (!modal.classList.contains('hidden') && visibleFocusables.length > 0) (firstInput || visibleFocusables[0]).focus();
+      }, 50);
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      document.querySelectorAll('body > header, body > main').forEach(el => { el.inert = false; });
+      state.editingAssetId = null;
+      state.valInputRevealed = false;
+      if (state.activeModalTriggerBtn && typeof state.activeModalTriggerBtn.focus === 'function') {
+        state.activeModalTriggerBtn.focus();
+      }
+    }
+
+    // 向后兼容弹窗关闭函数别名
+    function closeValuationModal() { closeModal('valuationModal'); }
+    function closeAddAssetModal() { closeModal('addAssetModal'); }
+    function closeEditAssetModal() { closeModal('editAssetModal'); }
+    function closeTargetConfigModal() { closeModal('targetConfigModal'); }
+    function closeDataModal() { closeModal('dataModal'); }
+    function closeSettingsModal() { closeModal('settingsModal'); }
+
+    // 全局模态焦点陷阱与 Escape 键监听
+    window.addEventListener('keydown', (e) => {
+      const openModalIds = ['valuationModal', 'addAssetModal', 'editAssetModal', 'targetConfigModal', 'dataModal', 'settingsModal']
+        .filter(id => {
+          const el = document.getElementById(id);
+          return el && !el.classList.contains('hidden');
+        });
+
+      if (openModalIds.length === 0) return;
+      const currentModalId = openModalIds[openModalIds.length - 1];
+      const currentModal = document.getElementById(currentModalId);
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal(currentModalId);
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const focusables = currentModal.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        const visibleFocusables = Array.from(focusables).filter(el => el.offsetParent !== null && !el.hidden && el.tabIndex !== -1);
+        if (visibleFocusables.length === 0) return;
+
+        const first = visibleFocusables[0];
+        const last = visibleFocusables[visibleFocusables.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first || !currentModal.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last || !currentModal.contains(document.activeElement)) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    });
+
+    // ==================== 估值变动弹窗专属业务逻辑 ====================
+
+    // Common descriptions selected by the user; they do not constrain balance changes.
+    function populateReasonOptions(category, isLiability) {
+      const select = document.getElementById('valModalReasonSelect');
+      select.innerHTML = `<option value="">${t("余额更新")}</option>`;
+
+      let options = [];
+      if (isLiability || category === 'debt') {
+        options = [
+          { val: "还款", label: "还款", isIncome: false },
+          { val: "新增借款", label: "新增借款", isIncome: false }
+        ];
+      } else if (category === 'fund') {
+        options = [
+          { val: "市场估值波动", label: "市场估值波动 (计入收益)", isIncome: true },
+          { val: "主动追加买入", label: "主动追加买入 (外部加仓/不计收益)", isIncome: false },
+          { val: "赎回/现金分红", label: "赎回/现金分红 (减持/变现)", isIncome: false }
+        ];
+      } else if (category === 'fixed') {
+        options = [
+          { val: "利息结息入账", label: "利息结息入账 (计入收益)", isIncome: true },
+          { val: "追加存入", label: "追加存入 (外部本金存入)", isIncome: false },
+          { val: "到期支取", label: "到期支取 (本金取出)", isIncome: false }
+        ];
+      } else if (category === 'cash') {
+        options = [
+          { val: "活钱利息收益", label: "货基/活期结息 (计入收益)", isIncome: true },
+          { val: "资金转入", label: "资金转入 (工资结余/外部转入)", isIncome: false },
+          { val: "日常支出", label: "资金转出/日常消费支出", isIncome: false }
+        ];
+      } else if (category === 'gold') {
+        options = [
+          { val: "金价估值波动", label: "金价公允估值波动 (计入收益)", isIncome: true },
+          { val: "追加购金", label: "追加购金 (买入黄金资产)", isIncome: false },
+          { val: "减持变现", label: "减持变现 (卖出黄金)", isIncome: false }
+        ];
+      } else if (category === 'real') {
+        options = [
+          { val: "公允估值重估", label: "公允估值重估 (市场价格调整，计入收益)", isIncome: true },
+          { val: "改扩建装修投入", label: "改扩建/装修投入 (本金追加)", isIncome: false }
+        ];
+      } else {
+        options = [
+          { val: "估值波动", label: "市场估值波动 (计入收益)", isIncome: true },
+          { val: "资金追加", label: "资金追加存入", isIncome: false },
+          { val: "资金转出", label: "资金转出/赎回", isIncome: false }
+        ];
+      }
+
+      options.forEach(opt => {
+        const optEl = document.createElement('option');
+        optEl.value = opt.val;
+        optEl.dataset.isIncome = opt.isIncome ? "true" : "false";
+        optEl.textContent = t(opt.label);
+        select.appendChild(optEl);
+      });
+    }
+
+    // 隐私遮罩：显示并编辑金额
+    function revealValuationInput() {
+      state.valInputRevealed = true;
+      document.getElementById('valModalPrivacyGuard').classList.add('hidden');
+      document.getElementById('valModalInputWrapper').classList.remove('hidden');
+      const input = document.getElementById('valModalNewAmount');
+      input.focus();
+      input.select();
+      updateValuationPreview();
+    }
+
+    // 更新估值弹窗隐私展示状态
+    function updateValuationModalPrivacyState() {
+      const asset = state.assets.find(a => a.id === state.editingAssetId);
+      if (!asset) return;
+
+      const peekBtn = document.getElementById('btn-val-peek');
+      const guard = document.getElementById('valModalPrivacyGuard');
+      const inputWrapper = document.getElementById('valModalInputWrapper');
+      const oldAmtEl = document.getElementById('valModalOldAmount');
+
+      if (state.isPrivacy) {
+        peekBtn.classList.remove('hidden');
+        peekBtn.textContent = t("显示数值");
+        oldAmtEl.textContent = fmtMoney(asset.amount);
+        if (!state.valInputRevealed) {
+          guard.classList.remove('hidden');
+          inputWrapper.classList.add('hidden');
+        } else {
+          guard.classList.add('hidden');
+          inputWrapper.classList.remove('hidden');
+        }
+      } else {
+        peekBtn.classList.add('hidden');
+        oldAmtEl.textContent = fmtMoney(asset.amount, true);
+        guard.classList.add('hidden');
+        inputWrapper.classList.remove('hidden');
+      }
+    }
+
+    // 原金额窥视切换
+    function toggleValOldPeek() {
+      const asset = state.assets.find(a => a.id === state.editingAssetId);
+      if (!asset) return;
+      const el = document.getElementById('valModalOldAmount');
+      const btn = document.getElementById('btn-val-peek');
+      if (el.textContent.includes("•")) {
+        el.textContent = fmtMoney(asset.amount, true);
+        btn.textContent = t("隐藏");
+      } else {
+        el.textContent = fmtMoney(asset.amount);
+        btn.textContent = t("显示数值");
+      }
+    }
+
+    function updateValuationPreview() {
+      const asset = state.assets.find(a => a.id === state.editingAssetId);
+      if (!asset) return;
+      const raw = document.getElementById('valModalNewAmount').value.trim();
+      const amount = Number(raw);
+      const valid = raw !== '' && validMoney(amount) && amount >= 0;
+      const masked = state.isPrivacy && !state.valInputRevealed;
+      const diff = valid ? roundMoney(roundMoney(amount) - asset.amount) : 0;
+      document.getElementById('prev-flow').textContent = masked ? "•••• ➔ ••••"
+        : `${fmtMoney(asset.amount, true)} ➔ ${valid ? fmtMoney(roundMoney(amount), true) : '—'}`;
+      const difference = document.getElementById('prev-diff');
+      difference.className = "text-slate-800 font-bold";
+      difference.textContent = masked ? "••••" : !valid ? '—'
+        : diff === 0 ? t("持平") : `${diff > 0 ? '+' : ''}${fmtMoney(diff, true)}`;
+    }
+
+    // 打开更新金额弹窗
+    function openValuationModal(id) {
+      if (state.storageReadError) return;
+      state.activeModalTriggerBtn = document.activeElement;
+      state.editingAssetId = id;
+      state.valInputRevealed = false;
+      const asset = state.assets.find(a => a.id === id);
+      if (!asset) return;
+
+      document.getElementById('valModalSub').textContent = `${institutionLabel(asset.institution)} · ${asset.name}`;
+      
+      populateReasonOptions(asset.category, asset.isLiability);
+
+      document.getElementById('valModalNewAmount').value = asset.amount;
+      document.getElementById('valModalRemark').value = "";
+      document.getElementById('valModalError').classList.add('hidden');
+
+      updateValuationModalPrivacyState();
+      updateValuationPreview();
+
+      const modal = document.getElementById('valuationModal');
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+
+      if (state.isPrivacy) {
+        document.getElementById('btn-reveal-val-input').focus();
+      } else {
+        const input = document.getElementById('valModalNewAmount');
+        input.focus();
+        input.select();
+      }
+    }
+
+    // Save only the selected account's entered balance and its recorded difference.
+    function buildValuationUpdate(data, id, amount, reason = '', isIncome = false, remark = '') {
+      if (!validMoney(amount) || amount < 0) throw new Error(t("请输入大于等于 0 的有效金额。"));
+      const next = cloneData(ledgerPayload(data));
+      const asset = next.assets.find(a => a.id === id);
+      if (!asset) throw new Error(t("未找到该资产，请重新打开。"));
+      const diff = roundMoney(roundMoney(amount) - asset.amount);
+      if (!diff) return null;
+      const date = localDate();
+      asset.amount = roundMoney(amount); asset.lastDiff = diff; asset.updatedAt = date;
+      next.logs.unshift({id:nextRecordId(next.logs), assetId:asset.id, owner:asset.owner, date, assetName:asset.name,
+        diff, isLiability:!!asset.isLiability, type:reason || '余额更新', isIncome:!!isIncome, desc:remark});
+      recordDailySnapshot(next);
+      return next;
+    }
+
+    function saveValuationUpdate() {
+      const amountInput = document.getElementById('valModalNewAmount');
+      const select = document.getElementById('valModalReasonSelect');
+      feedback('valModalError', '');
+      if (!amountInput.value.trim()) { feedback('valModalError', t("请输入最新金额。")); amountInput.focus(); return; }
+      try {
+        const next = buildValuationUpdate(state, state.editingAssetId, Number(amountInput.value), select.value,
+          select.selectedOptions[0]?.dataset.isIncome === 'true', document.getElementById('valModalRemark').value.trim());
+        if (next) commitLedger(next);
+        closeModal('valuationModal'); refreshAllViews();
+      } catch (error) { feedback('valModalError', error.message); }
+    }
+
+    function openAddAssetModal() {
+      feedback('add-feedback', '');
+      document.getElementById('addNameError').classList.add('hidden');
+      document.getElementById('addAmountError').classList.add('hidden');
+      document.getElementById('newAssetName').removeAttribute('aria-invalid');
+      document.getElementById('newAssetAmount').removeAttribute('aria-invalid');
+      openModal('addAssetModal');
+      document.getElementById('newAssetName').focus();
+    }
+
+    function saveNewAsset() {
+      const nameInput = document.getElementById('newAssetName');
+      const amtInput = document.getElementById('newAssetAmount');
+      const name = nameInput.value.trim();
+      const amount = Number(amtInput.value);
+      feedback('add-feedback', '');
+
+      let hasError = false;
+      if (!name) {
+        document.getElementById('addNameError').classList.remove('hidden');
+        hasError = true;
+      } else {
+        document.getElementById('addNameError').classList.add('hidden');
+      }
+
+      if (!amtInput.value.trim() || !validMoney(amount) || amount < 0) {
+        document.getElementById('addAmountError').classList.remove('hidden');
+        hasError = true;
+      } else {
+        document.getElementById('addAmountError').classList.add('hidden');
+      }
+
+      nameInput.setAttribute('aria-invalid', String(!name));
+      amtInput.setAttribute('aria-invalid', String(!amtInput.value.trim() || !validMoney(amount) || amount < 0));
+      if (hasError) { (!name ? nameInput : amtInput).focus(); return; }
+
+      try {
+        requireReadableLedger();
+        const next = cloneData(ledgerPayload());
+        const category = document.getElementById('newAssetCategory').value;
+        const owner = document.getElementById('newAssetOwner').value;
+        const institution = document.getElementById('newAssetInstitution').value.trim() || "自主管理";
+        const note = document.getElementById('newAssetNote').value.trim();
+        const isDebt = (category === 'debt');
+
+        const newObj = {
+          id: nextRecordId(next.assets),
+          name: name,
+          category: category,
+          owner: owner,
+          institution: institution,
+          amount: roundMoney(amount),
+          lastDiff: 0,
+          updatedAt: localDate(),
+          note: note,
+          isLiability: isDebt
+        };
+
+        next.assets.unshift(newObj);
+        next.logs.unshift({
+          id: nextRecordId(next.logs),
+          assetId: newObj.id,
+          owner: owner,
+          date: localDate(),
+          assetName: name,
+          diff: newObj.amount,
+          isLiability: isDebt,
+          type: isDebt ? "新增负债" : "资金存入",
+          isIncome: false,
+          desc: isDebt ? "新增负债账目录入" : "新增资产标的入账建仓"
+        });
+
+        recordDailySnapshot(next);
+        commitLedger(next);
+        closeModal('addAssetModal');
+        nameInput.value = '';
+        amtInput.value = '';
+        document.getElementById('newAssetNote').value = '';
+        refreshAllViews();
+      } catch (error) { feedback('add-feedback', t("保存失败，现有数据未变：") + error.message); }
+    }
+
+    // ==================== 编辑资产弹窗业务逻辑 ====================
+
+    function openEditAssetModal(id) {
+      feedback('edit-feedback', '');
+      state.editingAssetId = id;
+      const asset = state.assets.find(a => a.id === id);
+      if (!asset) return;
+
+      document.getElementById('editAssetName').value = asset.name;
+      document.getElementById('editAssetCategory').value = asset.category;
+      document.getElementById('editAssetOwner').value = asset.owner;
+      document.getElementById('editAssetInstitution').value = asset.institution;
+      document.getElementById('editAssetNote').value = asset.note || '';
+
+      openModal('editAssetModal');
+      document.getElementById('editAssetName').focus();
+    }
+
+    function saveEditAsset() {
+      feedback('edit-feedback', '');
+      try {
+        requireReadableLedger();
+        const next = cloneData(ledgerPayload());
+        const asset = next.assets.find(a => a.id === state.editingAssetId);
+        if (!asset) return;
+
+        const name = document.getElementById('editAssetName').value.trim();
+        if (!name) throw new Error(t("资产名称不能为空。"));
+
+        asset.name = name;
+        asset.category = document.getElementById('editAssetCategory').value;
+        asset.owner = document.getElementById('editAssetOwner').value;
+        asset.institution = document.getElementById('editAssetInstitution').value.trim() || "自主管理";
+        asset.note = document.getElementById('editAssetNote').value.trim();
+        asset.isLiability = (asset.category === 'debt');
+
+        recordDailySnapshot(next);
+        commitLedger(next);
+        closeModal('editAssetModal');
+        refreshAllViews();
+      } catch (error) { feedback('edit-feedback', t("保存失败，现有数据未变：") + error.message); }
+    }
+
+    // 删除资产标的
+    function deleteAsset(id) {
+      try {
+        requireReadableLedger();
+        const asset = state.assets.find(a => a.id === id);
+        if (!asset || !confirm(t("确定彻底删除【{0}】吗？", [asset.name]))) return;
+
+        const next = cloneData(ledgerPayload());
+        next.assets = next.assets.filter(a => a.id !== id);
+        recordDailySnapshot(next);
+        commitLedger(next);
+        refreshAllViews();
+      } catch (error) { alert(t("删除失败，现有数据未变：") + error.message); }
+    }
+
+    // ==================== 目标配置弹窗业务逻辑 ====================
+
+    function openTargetConfigModal() {
+      feedback('target-feedback', '');
+      document.getElementById('cfg-cash-min').value = state.targets.cash.min;
+      document.getElementById('cfg-cash-max').value = state.targets.cash.max;
+      document.getElementById('cfg-fixed-min').value = state.targets.fixed.min;
+      document.getElementById('cfg-fixed-max').value = state.targets.fixed.max;
+      document.getElementById('cfg-equity-min').value = state.targets.fund.min;
+      document.getElementById('cfg-equity-max').value = state.targets.fund.max;
+      document.getElementById('cfg-gold-min').value = state.targets.gold.min;
+      document.getElementById('cfg-gold-max').value = state.targets.gold.max;
+
+      openModal('targetConfigModal');
+    }
+
+    function saveTargetConfig() {
+      feedback('target-feedback', '');
+      try {
+        requireReadableLedger();
+        const next = cloneData(ledgerPayload());
+        for (const [key, field] of [['cash','cash'], ['fixed','fixed'], ['fund','equity'], ['gold','gold']]) {
+          const min = document.getElementById(`cfg-${field}-min`).value.trim();
+          const max = document.getElementById(`cfg-${field}-max`).value.trim();
+          if (!min || !max) throw new Error(t("请填写每类资产的目标上下限。"));
+          next.targets[key] = {min:Number(min), max:Number(max)};
+        }
+        validateTargets(next.targets);
+        commitLedger(next);
+        closeModal('targetConfigModal');
+        refreshAllViews();
+      } catch (error) { feedback('target-feedback', error.message); }
+    }
+
+    function validateTargets(targets) {
+      const object = value => value && typeof value === 'object' && !Array.isArray(value);
+      if (!object(targets)) throw new Error(t("配置目标必须是对象。"));
+      for (const key of ['cash','fixed','fund','gold']) {
+        const target = targets[key];
+        if (!object(target) || !Number.isFinite(target.min) || !Number.isFinite(target.max) || target.min < 0 || target.min > target.max || target.max > 100) {
+          throw new Error(t("配置目标须满足 0 ≤ 下限 ≤ 上限 ≤ 100。"));
+        }
+      }
+    }
+
+    // ==================== 家庭成员维护 ====================
+
+    function openSettingsModal() {
+      feedback('settings-feedback', '');
+      document.getElementById('settingP1Name').removeAttribute('aria-invalid');
+      document.getElementById('settingP2Name').removeAttribute('aria-invalid');
+      state.activeModalTriggerBtn = document.getElementById('btn-settings') || document.activeElement;
+
+      const p1Input = document.getElementById('settingP1Name');
+      const p2Input = document.getElementById('settingP2Name');
+      const errP1 = document.getElementById('settingP1Error');
+      const errP2 = document.getElementById('settingP2Error');
+
+      if (errP1) {
+        errP1.textContent = '';
+        errP1.classList.add('hidden');
+      }
+      if (errP2) {
+        errP2.textContent = '';
+        errP2.classList.add('hidden');
+      }
+
+      if (p1Input) {
+        p1Input.value = state.members?.p1?.name || '张先生';
+      }
+      if (p2Input) {
+        p2Input.value = state.members?.p2?.name || '李女士';
+      }
+
+      openModal('settingsModal');
+    }
+
+    function saveSettings() {
+      const p1Input = document.getElementById('settingP1Name');
+      const p2Input = document.getElementById('settingP2Name');
+      const errP1 = document.getElementById('settingP1Error');
+      const errP2 = document.getElementById('settingP2Error');
+
+      const p1Val = p1Input ? p1Input.value.trim() : '';
+      const p2Val = p2Input ? p2Input.value.trim() : '';
+
+      let hasError = false;
+
+      if (!p1Val) {
+        if (errP1) {
+          errP1.textContent = t("本人姓名或称谓不能为空！");
+          errP1.classList.remove('hidden');
+        }
+        p1Input?.focus();
+        hasError = true;
+      } else if (errP1) {
+        errP1.textContent = '';
+        errP1.classList.add('hidden');
+      }
+
+      if (!p2Val) {
+        if (errP2) {
+          errP2.textContent = t("配偶姓名或称谓不能为空！");
+          errP2.classList.remove('hidden');
+        }
+        if (!hasError) p2Input?.focus();
+        hasError = true;
+      } else if (errP2) {
+        errP2.textContent = '';
+        errP2.classList.add('hidden');
+      }
+
+      p1Input.setAttribute('aria-invalid', String(!p1Val));
+      p2Input.setAttribute('aria-invalid', String(!p2Val));
+      if (hasError) return;
+
+      try {
+        const members = resolveMembers({p1:{id:'p1',name:p1Val},p2:{id:'p2',name:p2Val}});
+        commitLedger({...ledgerPayload(), members});
+        closeModal('settingsModal'); refreshAllViews();
+      } catch (error) { feedback('settings-feedback', error.message); }
+    }
+
+    // ==================== 数据备份与恢复业务逻辑 ====================
+
+    function openDataModal() {
+      feedback('data-feedback', '');
+      document.getElementById('storage-status').textContent = state.storageReadError ? t("读取失败 · 原数据已保留") : isEmptyLedger() ? t("空账本") : t("已保存至当前浏览器");
+      openModal('dataModal');
+    }
+
+    function openImportBackup() {
+      if (state.isDemo) return;
+      openDataModal();
+      triggerImportFileInput();
+    }
+
+    function triggerImportFileInput() {
+      if (state.isDemo) return;
+      const fileInput = document.getElementById('importFileInput');
+      if (fileInput) {
+        fileInput.value = ''; // 确保重复选同一个文件也能触发 change 事件
+        fileInput.click();
+      }
+    }
+
+    function createBackup(data = state) {
+      return {app:'family_asset_ledger', version:'2.3', backupAt:new Date().toISOString(), ...cloneData(ledgerPayload(data))};
+    }
+    function exportBackupJson() {
+      try {
+        if (state.isDemo) throw new Error(t('示例仅供查看，请返回自己的账本后编辑。'));
+        if (state.storageReadError) throw new Error(t("当前数据尚未成功读取，请勿将空界面导出为账本备份。"));
+        const backup = createBackup();
+        const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `family_assets_backup_${localDate()}.json`; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        commitLedger({...ledgerPayload(), lastBackupTime:backup.backupAt});
+        refreshAllViews(); feedback('data-feedback', t("已生成备份，请确认下载文件已保存。"));
+      } catch (error) { feedback('data-feedback', error.message); }
+    }
+
+    function prepareBackup(parsed, currentMembers = state.members) {
+      const object = v => v && typeof v === 'object' && !Array.isArray(v);
+      const date = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0,10) === v;
+      if (!object(parsed) || !Array.isArray(parsed.assets)) throw new Error(t("备份必须包含 assets 数组（允许空账本）。"));
+      if (parsed.app !== undefined && parsed.app !== 'family_asset_ledger') throw new Error(t("这不是家庭资产账本备份。"));
+      if (parsed.version !== undefined && !['1.0','2.0','2.1','2.2','2.3'].includes(String(parsed.version))) throw new Error(t("暂不支持该备份版本。"));
+      if (['2.2','2.3'].includes(String(parsed.version)) && parsed.currency === undefined) throw new Error(t('备份缺少币种设置。'));
+      const next = {currency:resolveCurrency(parsed.currency), members:resolveMembers(parsed.members, currentMembers), assets:cloneData(parsed.assets),
+        history:parsed.history === undefined ? {} : cloneData(parsed.history),
+        logs:parsed.logs === undefined ? [] : cloneData(parsed.logs),
+        targets:parsed.targets === undefined ? cloneData(DEMO_TARGETS) : cloneData(parsed.targets), lastBackupTime:null};
+      const owners = ['p1','p2','share'], categories = ['cash','fixed','fund','gold','real','debt'];
+      const ids = new Set();
+      next.assets.forEach((a,i) => {
+        if (!object(a) || !Number.isSafeInteger(a.id) || a.id < 0 || ids.has(a.id)) throw new Error(t("第 {0} 项资产 ID 缺失或重复。", [i+1]));
+        ids.add(a.id);
+        if (typeof a.name !== 'string' || !a.name.trim() || !validMoney(a.amount) || a.amount < 0) throw new Error(t("第 {0} 项资产名称或金额无效。", [i+1]));
+        if (!owners.includes(a.owner) || !categories.includes(a.category)) throw new Error(t("第 {0} 项资产归属或分类无效。", [i+1]));
+        if (a.isLiability !== undefined && a.isLiability !== (a.category === 'debt')) throw new Error(t("第 {0} 项资产的负债标记与分类不一致。", [i+1]));
+        a.isLiability = a.category === 'debt';
+        for (const key of ['institution','note']) {
+          if (a[key] !== undefined && typeof a[key] !== 'string') throw new Error(t("资产 {0} 字段必须是文本。", [key]));
+          a[key] ??= '';
+        }
+        a.lastDiff ??= 0;
+        if (!validMoney(a.lastDiff)) throw new Error(t("资产变动金额无效。"));
+        if (/^\d{2}-\d{2}$/.test(a.updatedAt || '')) a.updatedAt = '2026-' + a.updatedAt;
+        a.updatedAt ??= localDate();
+        if (!date(a.updatedAt)) throw new Error(t("资产更新时间无效。"));
+      });
+      if (!object(next.history)) throw new Error(t("历史快照必须是按成员分组的对象。"));
+      for (const member of ['all',...owners]) {
+        next.history[member] ??= [];
+        if (!Array.isArray(next.history[member])) throw new Error(t("成员历史快照必须是数组。"));
+        const dates = new Set();
+        for (const point of next.history[member]) {
+          if (!object(point) || !date(point.date) || dates.has(point.date) || !['totalAssets','liabilities','netWorth'].every(k=>validMoney(point[k])) || point.totalAssets < 0 || point.liabilities < 0 || Math.abs(point.totalAssets-point.liabilities-point.netWorth)>0.02) throw new Error(t("历史快照日期、金额或净资产关系无效。"));
+          dates.add(point.date); point.month ??= point.date.slice(0,7).replace('-','.');
+        }
+        next.history[member].sort((a,b)=>a.date.localeCompare(b.date));
+      }
+      if (!Array.isArray(next.logs)) throw new Error(t("变动流水必须是数组。"));
+      const logIds = new Set();
+      for (const log of next.logs) {
+        if (!object(log) || !Number.isSafeInteger(log.id) || log.id < 0 || logIds.has(log.id) || !date(log.date) || !owners.includes(log.owner) || !validMoney(log.diff)) throw new Error(t("流水 ID、日期、归属或金额无效。"));
+        logIds.add(log.id);
+        for (const key of ['assetName','type','desc']) {
+          if (log[key] !== undefined && typeof log[key] !== 'string') throw new Error(t("流水名称、类型和说明必须是文本。"));
+          log[key] ??= '';
+        }
+        for (const key of ['netImpact','pairedDiff','interestPaid']) if (log[key] != null && !validMoney(log[key])) throw new Error(t("流水金额字段无效。"));
+        for (const key of ['isIncome','isLiability','hasPairedAccount','pendingCheck']) if (log[key] !== undefined && typeof log[key] !== 'boolean') throw new Error(t("流水状态字段无效。"));
+        for (const key of ['assetId','pairedAssetId']) if (log[key] !== undefined && !Number.isSafeInteger(log[key])) throw new Error(t("流水关联 ID 无效。"));
+        if (log.pairedOwner !== undefined && !owners.includes(log.pairedOwner)) throw new Error(t("付款账户归属无效。"));
+      }
+      validateTargets(next.targets);
+      return next;
+    }
+
+    function handleImportFileSelected(event) {
+      const input = event.target;
+      if (state.isDemo) { input.value = ''; return; }
+      const file = input.files && input.files[0];
+      if (!file) return;
+      feedback('data-feedback', '');
+      const reader = new FileReader();
+      reader.onload = e => {
+        let next;
+        try {
+          next = prepareBackup(JSON.parse(e.target.result));
+          const summary = t("将覆盖资产、历史快照、流水和配置目标。\n资产 {0} 项，流水 {1} 笔，快照 {2} 个。\n成员：{3} / {4}。\n旧备份缺少的历史或流水将置空，不与当前账本混合。\n建议先导出当前账本。确定恢复？", [next.assets.length, next.logs.length, next.history.all.length, next.members.p1.name, next.members.p2.name]);
+          if (!confirm(summary + t('\n统一币种：{0}（不进行汇率换算）。', [next.currency]))) return;
+          next.lastBackupTime = new Date().toISOString();
+          commitLedger(next, {allowRecovery:true});
+        } catch (error) {
+          feedback('data-feedback', t("恢复失败，现有数据未变：") + error.message);
+          return;
+        } finally { input.value = ''; }
+        state.revealedLogIds = new Set();
+        refreshAllViews();
+        feedback('data-feedback', t("恢复成功，成员配置及账本数据已保存。"));
+      };
+      reader.onerror = () => { feedback('data-feedback', t("读取文件失败，现有数据未变。")); input.value = ''; };
+      reader.readAsText(file);
+    }
+
+    function importBackupJson(event) {
+      handleImportFileSelected(event);
+    }
+
+    // 窗口调整自适应重绘
+    window.addEventListener('resize', () => drawTrendChart());
+
+    // 启动初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      translateStaticPage();
+      applyAppearance();
+      initDataStore();
+      refreshAllViews();
+      setTimeout(() => {
+        initChartInteractions();
+      }, 60);
+    });
+  </script>
+</body>
+</html>
